@@ -1,0 +1,574 @@
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+ERROR 1062 (23000): Duplicate entry 'a@x.com' for key 'email'
+ERROR 1406 (22001): Data too long for column 'name' at row 1
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
++----+------+---------+------+
+| id | name | email   | age  |
++----+------+---------+------+
+|  1 | Ann  | a@x.com |   30 |
+|  2 | Bob  | b@x.com |   25 |
+|  3 | Cy   | NULL    | NULL |
++----+------+---------+------+
+3 rows in set (X sec)
+
++------+---+------+
+| name | n | s    |
++------+---+------+
+| Ann  | 2 | 30.5 |
+| Bob  | 1 | 7.25 |
+| Cy   | 0 | NULL |
++------+---+------+
+3 rows in set (X sec)
+
++------+
+| name |
++------+
+| Ann  |
++------+
+1 row in set (X sec)
+
+Query OK, 1 row affected (X sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 3 rows affected (X sec)
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
++---+----------+------------------------+--------+---------+------------------+
+| c | MAX(age) | CONCAT(UPPER('a'),'b') | 10/4   | 7 DIV 2 | IFNULL(NULL,'x') |
++---+----------+------------------------+--------+---------+------------------+
+| 3 |       30 | Ab                     | 2.5000 |       3 | x                |
++---+----------+------------------------+--------+---------+------------------+
+1 row in set (X sec)
+
++-------+
+| g     |
++-------+
+| old   |
+| young |
++-------+
+2 rows in set (X sec)
+
++-------+-------------+------+-----+---------+----------------+
+| Field | Type        | Null | Key | Default | Extra          |
++-------+-------------+------+-----+---------+----------------+
+| id    | int         | NO   | PRI | NULL    | auto_increment |
+| name  | varchar(10) | NO   |     | NULL    |                |
+| email | varchar(30) | YES  | UNI | NULL    |                |
+| age   | int         | YES  |     | 18      |                |
++-------+-------------+------+-----+---------+----------------+
+4 rows in set (X sec)
+
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                         |
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| users | CREATE TABLE `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(10) NOT NULL,
+  `email` varchar(30) DEFAULT NULL,
+  `age` int DEFAULT '18',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+ERROR 1054 (42S22): Unknown column 'nope' in 'field list'
++----------------+
+| Tables_in_shop |
++----------------+
+| orders         |
+| users          |
++----------------+
+2 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
++---+
+| a |
++---+
+| 1 |
+| 3 |
+| 2 |
++---+
+3 rows in set (X sec)
+
++---+
+| a |
++---+
+| 1 |
+| 1 |
+| 3 |
+| 1 |
+| 1 |
+| 3 |
++---+
+6 rows in set (X sec)
+
++------+
+| name |
++------+
+| Ann  |
+| Bob  |
++------+
+2 rows in set (X sec)
+
++------+----+
+| name | mx |
++------+----+
+| Cy   | 20 |
++------+----+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+ERROR 1062 (23000): Duplicate entry '1' for key 'ua'
+Query OK, 1 row affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+ERROR 1062 (23000): Duplicate entry 'z' for key 'uc'
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++---+---+
+| a | c |
++---+---+
+| 1 | z |
+| 3 | z |
++---+---+
+2 rows in set (X sec)
+
++----------------+
+| Tables_in_shop |
++----------------+
+| orders         |
+| t3             |
+| users          |
++----------------+
+3 rows in set (X sec)
+
++------+-------+
+| name | total |
++------+-------+
+| Ann  |  10.5 |
+| Ann  |    20 |
+| Bob  |  7.25 |
+| Cy   | NULL  |
++------+-------+
+4 rows in set (X sec)
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (X sec)
+
++------+----+
+| name | id |
++------+----+
+| Ann  |  1 |
+| Ann  |  2 |
++------+----+
+2 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 1 row affected (X sec)
+
+ERROR 1264 (22003): Out of range value for column 'n' at row 1
+ERROR 1292 (22007): Incorrect date value: '2023-02-29' for column 'd' at row 1
+ERROR 1292 (22007): Incorrect date value: '2024-13-01' for column 'd' at row 1
+ERROR 1264 (22003): Out of range value for column 'id' at row 1
+ERROR 1406 (22001): Data too long for column 'name' at row 1
+Query OK, 1 row affected (X sec)
+
++----+-----+------------+---------------------+------+----+
+| id | n   | d          | ts                  | name | nm |
++----+-----+------------+---------------------+------+----+
+|  1 | 100 | 2024-02-29 | 2024-02-29 13:05:00 | abc  | xy |
+|  5 |   1 | 2024-01-05 | 2024-01-05 12:30:00 | ok   | b  |
++----+-----+------------+---------------------+------+----+
+2 rows in set (X sec)
+
++----+------------+------------+---------------------+------------+-----+
+| dd | m1         | ny         | ts2                 | dt         | dow |
++----+------------+------------+---------------------+------------+-----+
+| 29 | 2024-02-29 | 2025-01-01 | 2024-02-29 11:35:00 | 2024-02-29 |   5 |
++----+------------+------------+---------------------+------------+-----+
+1 row in set (X sec)
+
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| id    | int unsigned | NO   | PRI | NULL    |       |
+| n     | tinyint      | YES  |     | NULL    |       |
+| d     | date         | YES  |     | NULL    |       |
+| ts    | datetime     | YES  |     | NULL    |       |
+| name  | varchar(5)   | YES  |     | NULL    |       |
+| nm    | varchar(5)   | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+6 rows in set (X sec)
+
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                        |
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ev    | CREATE TABLE `ev` (
+  `id` int unsigned NOT NULL,
+  `n` tinyint DEFAULT NULL,
+  `d` date DEFAULT NULL,
+  `ts` datetime DEFAULT NULL,
+  `name` varchar(5) DEFAULT NULL,
+  `nm` varchar(5) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+ERROR 1264 (22003): Out of range value for column 'price' at row 1
++----+---------+---------+------------+--------+----------+
+| id | price   | total   | third      | r1     | neg      |
++----+---------+---------+------------+--------+----------+
+|  1 |   20.00 |   60.00 |   6.666667 |   20.0 |   -20.00 |
+|  2 |    5.00 |   10.00 |   1.666667 |    5.0 |    -5.00 |
+|  3 | 1234.50 | 1234.50 | 411.500000 | 1234.5 | -1234.50 |
++----+---------+---------+------------+--------+----------+
+3 rows in set (X sec)
+
++------------+------------+----------+------------+----------+----------+-----------+--------+----------+
+| SUM(price) | AVG(price) | AVG(qty) | MAX(price) | SUM(qty) | AVG(dbl) | 0.1 + 0.2 | 10 / 4 | 2 * 1.50 |
++------------+------------+----------+------------+----------+----------+-----------+--------+----------+
+|    1259.50 | 419.833333 |   2.0000 |    1234.50 |        6 |      0.2 |       0.3 | 2.5000 |     3.00 |
++------------+------------+----------+------------+----------+----------+-----------+--------+----------+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
++----+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  5 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  5 |
++----+
+1 row in set (X sec)
+
+Database changed
+
++------+---+
+| name | n |
++------+---+
+| Ann  | 2 |
+| Bob  | 1 |
+| Cy   | 0 |
++------+---+
+3 rows in set (X sec)
+
++------+
+| name |
++------+
+| Ann  |
++------+
+1 row in set (X sec)
+
++------+
+| name |
++------+
+| Cy   |
++------+
+1 row in set (X sec)
+
++------+
+| name |
++------+
+| Ann  |
++------+
+1 row in set (X sec)
+
++------+
+| name |
++------+
+| Ann  |
++------+
+1 row in set (X sec)
+
++------+--------+
+| name | second |
++------+--------+
+| Ann  |   10.5 |
+| Bob  | NULL   |
+| Cy   | NULL   |
++------+--------+
+3 rows in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
++----+---------+-------+
+| id | user_id | total |
++----+---------+-------+
+|  2 |       1 |    20 |
+|  3 |       2 |  7.25 |
++----+---------+-------+
+2 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 6 rows affected (X sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
++----+-------------+-------+-------+---------------+---------+------+-------+
+| id | select_type | table | type  | possible_keys | key     | rows | Extra |
++----+-------------+-------+-------+---------------+---------+------+-------+
+|  1 | SIMPLE      | ix    | const | PRIMARY       | PRIMARY |    1 | NULL  |
++----+-------------+-------+-------+---------------+---------+------+-------+
+1 row in set (X sec)
+
++----+-------------+-------+------+---------------+-----+------+-------+
+| id | select_type | table | type | possible_keys | key | rows | Extra |
++----+-------------+-------+------+---------------+-----+------+-------+
+|  1 | SIMPLE      | ix    | ref  | ia            | ia  |    2 | NULL  |
++----+-------------+-------+------+---------------+-----+------+-------+
+1 row in set (X sec)
+
++----+-------------+-------+-------+---------------+-----+------+-------+
+| id | select_type | table | type  | possible_keys | key | rows | Extra |
++----+-------------+-------+-------+---------------+-----+------+-------+
+|  1 | SIMPLE      | ix    | range | ia            | ia  |    2 | NULL  |
++----+-------------+-------+-------+---------------+-----+------+-------+
+1 row in set (X sec)
+
++----+-------------+-------+-------+---------------+-----+------+-------+
+| id | select_type | table | type  | possible_keys | key | rows | Extra |
++----+-------------+-------+-------+---------------+-----+------+-------+
+|  1 | SIMPLE      | ix    | range | ibc           | ibc |    1 | NULL  |
++----+-------------+-------+-------+---------------+-----+------+-------+
+1 row in set (X sec)
+
++----+-------------+-------+-------+---------------+-----+------+-------+
+| id | select_type | table | type  | possible_keys | key | rows | Extra |
++----+-------------+-------+-------+---------------+-----+------+-------+
+|  1 | SIMPLE      | ix    | range | ia            | ia  |    3 | NULL  |
++----+-------------+-------+-------+---------------+-----+------+-------+
+1 row in set (X sec)
+
++----+-------------+-------+------+---------------+------+------+-------------+
+| id | select_type | table | type | possible_keys | key  | rows | Extra       |
++----+-------------+-------+------+---------------+------+------+-------------+
+|  1 | SIMPLE      | ix    | ALL  | NULL          | NULL |    6 | Using where |
++----+-------------+-------+------+---------------+------+------+-------------+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  3 |
++----+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  3 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  5 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  5 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  3 |
++----+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
++----+
+3 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  5 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  5 |
++----+
+2 rows in set (X sec)
+
+Query OK, 2 rows affected (X sec)
+Rows matched: 2  Changed: 2  Warnings: 0
+
++----+
+| id |
++----+
+|  1 |
+|  3 |
++----+
+2 rows in set (X sec)
+
+Empty set (X sec)
+
+Query OK, 2 rows affected (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  3 |
+|  4 |
+|  6 |
++----+
+4 rows in set (X sec)
+
+ERROR 1062 (23000): Duplicate entry '3' for key 'PRIMARY'
+Query OK, 1 row affected (X sec)
+
++----+
+| id |
++----+
+|  7 |
++----+
+1 row in set (X sec)
+
+ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
++----+----+
+| id | a  |
++----+----+
+|  1 | 99 |
+|  7 |  5 |
++----+----+
+2 rows in set (X sec)
+
++----+-------------+-------+------+---------------+------+------+-------+
+| id | select_type | table | type | possible_keys | key  | rows | Extra |
++----+-------------+-------+------+---------------+------+------+-------+
+|  1 | SIMPLE      | users | ALL  | NULL          | NULL |    3 | NULL  |
+|  1 | SIMPLE      | ix    | ref  | NULL          | ia   |    5 | NULL  |
++----+-------------+-------+------+---------------+------+------+-------+
+2 rows in set (X sec)
+
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                   |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ix    | CREATE TABLE `ix` (
+  `id` int NOT NULL,
+  `a` int DEFAULT NULL,
+  `b` varchar(10) DEFAULT NULL,
+  `c` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ia` (`a`),
+  KEY `ibc` (`b`,`c`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| id    | int         | NO   | PRI | NULL    |       |
+| a     | int         | YES  | MUL | NULL    |       |
+| b     | varchar(10) | YES  | MUL | NULL    |       |
+| c     | int         | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+4 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++----+-------------+-------+------+---------------+------+------+-------------+
+| id | select_type | table | type | possible_keys | key  | rows | Extra       |
++----+-------------+-------+------+---------------+------+------+-------------+
+|  1 | SIMPLE      | ix    | ALL  | NULL          | NULL |    5 | Using where |
++----+-------------+-------+------+---------------+------+------+-------------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++----+-------------+-------+------+---------------+-----+------+-------+
+| id | select_type | table | type | possible_keys | key | rows | Extra |
++----+-------------+-------+------+---------------+-----+------+-------+
+|  1 | SIMPLE      | ix    | ref  | ic            | ic  |    3 | NULL  |
++----+-------------+-------+------+---------------+-----+------+-------+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  4 |
+|  7 |
++----+
+3 rows in set (X sec)
