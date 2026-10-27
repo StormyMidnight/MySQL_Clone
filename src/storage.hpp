@@ -14,8 +14,19 @@ struct Column {
 	int len = 0;
 	bool notNull = false, autoInc = false, hasDef = false, defNow = false;
 	Value def;
+	std::string gen;          // GENERATED ALWAYS AS (gen): SQL text of the expression; empty for ordinary columns
+	bool genStored = false;   // STORED vs VIRTUAL (both are materialized in this engine)
 };
 struct UniqueKey { std::string name; std::vector<size_t> cols; };  // "PRIMARY" is always first if present
+struct CheckDef { std::string name, expr; };  // CHECK constraint; expr is the SQL text of the condition
+// Child-side foreign key. Actions: 0 NO ACTION (default), 1 CASCADE, 2 SET NULL, 3 RESTRICT.
+struct ForeignKey {
+	std::string name;
+	std::vector<size_t> cols;  // columns of the child (owning) table
+	std::string refDb, refTable;
+	std::vector<std::string> refCols;
+	int onDelete = 0, onUpdate = 0;
+};
 
 // Lexicographic order over compareValues; a shorter key sorts before any extension of it (prefix scans).
 struct KeyLess {
@@ -36,6 +47,8 @@ struct Table {
 	std::vector<Row> rows;
 	std::vector<UniqueKey> uniques;  // PRIMARY / UNIQUE keys
 	std::vector<UniqueKey> keys;     // non-unique secondary indexes
+	std::vector<ForeignKey> fks;     // foreign keys owned by this (child) table
+	std::vector<CheckDef> checks;    // CHECK constraints
 	int64_t autoNext = 1;
 
 	// Ordered in-memory indexes: uniques first, then keys. key -> row positions. Rows with a NULL

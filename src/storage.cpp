@@ -41,7 +41,7 @@ void Catalog::save(const std::string& path) const {
     {
         std::ofstream o(tmp, std::ios::binary | std::ios::trunc);
         if (!o) throw std::runtime_error("cannot write " + tmp);
-        o << "MYSQLCLONE 4 " << lsn << ' ' << dbs.size() << ' ';
+        o << "MYSQLCLONE 7 " << lsn << ' ' << dbs.size() << ' ';
         for (const auto& d : dbs) {
             wstr(o, d.first);
             o << d.second.tables.size() << ' ';
@@ -54,6 +54,8 @@ void Catalog::save(const std::string& path) const {
                     o << static_cast<int>(c.type) << ' ' << c.len << ' ' << c.notNull << ' ' << c.autoInc << ' '
                         << c.hasDef << ' ' << c.defNow << ' ';
                     wval(o, c.def);
+                    wstr(o, c.gen);
+                    o << c.genStored << ' ';
                 }
                 o << t.uniques.size() << ' ';
                 for (const UniqueKey& u : t.uniques) {
@@ -67,6 +69,18 @@ void Catalog::save(const std::string& path) const {
                     o << u.cols.size() << ' ';
                     for (size_t x : u.cols) o << x << ' ';
                 }
+                o << t.fks.size() << ' ';
+                for (const ForeignKey& f : t.fks) {
+                    wstr(o, f.name);
+                    o << f.cols.size() << ' ';
+                    for (size_t x : f.cols) o << x << ' ';
+                    wstr(o, f.refDb); wstr(o, f.refTable);
+                    o << f.refCols.size() << ' ';
+                    for (const std::string& rc : f.refCols) wstr(o, rc);
+                    o << f.onDelete << ' ' << f.onUpdate << ' ';
+                }
+                o << t.checks.size() << ' ';
+                for (const CheckDef& c : t.checks) { wstr(o, c.name); wstr(o, c.expr); }
                 o << t.autoNext << ' ' << t.rows.size() << ' ';
                 for (const Row& r : t.rows) for (const Value& v : r) wval(o, v);
             }
@@ -94,7 +108,7 @@ bool Catalog::load(const std::string& path) {
     lsn = 0;
     if (ver >= 2) in >> lsn;
     in >> nd;
-    if (magic != "MYSQLCLONE" || (ver < 1 || ver > 4)) throw std::runtime_error("bad data file: " + path);
+    if (magic != "MYSQLCLONE" || (ver < 1 || ver > 7)) throw std::runtime_error("bad data file: " + path);
     dbs.clear();
     for (size_t di = 0; di < nd; ++di) {
         Database d;
@@ -113,6 +127,7 @@ bool Catalog::load(const std::string& path) {
                 in >> type >> c.len >> c.notNull >> c.autoInc >> c.hasDef >> c.defNow;
                 c.type = static_cast<CType>(type);
                 c.def = rval(in);
+                if (ver >= 7) { c.gen = rstr(in); in >> c.genStored; }
                 t.cols.push_back(std::move(c));
             }
             size_t nu = 0;
@@ -136,6 +151,27 @@ bool Catalog::load(const std::string& path) {
                     for (size_t x = 0; x < k; ++x) { size_t c = 0; in >> c; u.cols.push_back(c); }
                     t.keys.push_back(std::move(u));
                 }
+            }
+            if (ver >= 5) {
+                size_t nf = 0;
+                in >> nf;
+                for (size_t fi = 0; fi < nf; ++fi) {
+                    ForeignKey f;
+                    f.name = rstr(in);
+                    size_t k = 0;
+                    in >> k;
+                    for (size_t x = 0; x < k; ++x) { size_t c = 0; in >> c; f.cols.push_back(c); }
+                    f.refDb = rstr(in); f.refTable = rstr(in);
+                    in >> k;
+                    for (size_t x = 0; x < k; ++x) f.refCols.push_back(rstr(in));
+                    in >> f.onDelete >> f.onUpdate;
+                    t.fks.push_back(std::move(f));
+                }
+            }
+            if (ver >= 6) {
+                size_t nk = 0;
+                in >> nk;
+                for (size_t ki = 0; ki < nk; ++ki) { CheckDef c; c.name = rstr(in); c.expr = rstr(in); t.checks.push_back(std::move(c)); }
             }
             size_t nr = 0;
             in >> t.autoNext >> nr;

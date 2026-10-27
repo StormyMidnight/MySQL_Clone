@@ -572,3 +572,970 @@ Records: 0  Duplicates: 0  Warnings: 0
 |  7 |
 +----+
 3 rows in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+Query OK, 2 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 1 row affected (X sec)
+
+Query OK, 1 row affected, 1 warning (X sec)
+Records: 2  Duplicates: 1  Warnings: 1
+
+Query OK, 3 rows affected (X sec)
+
+Query OK, 1 row affected (X sec)
+
++----+------+---+
+| id | name | n |
++----+------+---+
+|  1 | b    | 7 |
+|  3 | c    | 1 |
+|  4 | d    | 1 |
+|  9 | n    | 7 |
++----+------+---+
+4 rows in set (X sec)
+
+ERROR 1062 (23000): Duplicate entry '9' for key 'PRIMARY'
+Query OK, 3 rows affected (X sec)
+Records: 2  Duplicates: 1  Warnings: 0
+
++----+------+-----+
+| id | name | n   |
++----+------+-----+
+|  1 | b    |   7 |
+|  3 | c    |   1 |
+|  4 | d    | 101 |
+|  9 | n    |   7 |
+| 10 | m    |   2 |
++----+------+-----+
+5 rows in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 6 rows affected (X sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
++------+------+-----+----+----+----+
+| name | dept | sal | rn | rk | dr |
++------+------+-----+----+----+----+
+| ann  | eng  | 100 |  1 |  1 |  1 |
+| bob  | eng  |  80 |  2 |  2 |  3 |
+| cy   | eng  |  80 |  3 |  2 |  3 |
+| flo  | hr   |  60 |  1 |  1 |  5 |
+| ed   | ops  |  90 |  1 |  1 |  2 |
+| di   | ops  |  70 |  2 |  2 |  4 |
++------+------+-----+----+----+----+
+6 rows in set (X sec)
+
++------+-----+-----+---------+-----+
+| name | sal | run | avg_all | cnt |
++------+-----+-----+---------+-----+
+| ann  | 100 | 100 | 80.0000 |   3 |
+| bob  |  80 | 180 | 80.0000 |   3 |
+| cy   |  80 | 260 | 80.0000 |   3 |
+| di   |  70 | 330 | 80.0000 |   2 |
+| ed   |  90 | 420 | 80.0000 |   2 |
+| flo  |  60 | 480 | 80.0000 |   1 |
++------+-----+-----+---------+-----+
+6 rows in set (X sec)
+
++------+------+-----+-----+----+
+| name | prev | nxt | fv  | nt |
++------+------+-----+-----+----+
+| ann  | NULL |  80 | bob |  1 |
+| bob  |  100 |  70 | bob |  1 |
+| cy   |   80 |  90 | bob |  2 |
+| di   |   80 |  60 | di  |  2 |
+| ed   |   70 |  -1 | di  |  3 |
+| flo  |   90 |  -1 | flo |  3 |
++------+------+-----+-----+----+
+6 rows in set (X sec)
+
++----+------+-----+
+| id | win3 | mx  |
++----+------+-----+
+|  1 |  180 | 100 |
+|  2 |  260 |  90 |
+|  3 |  230 |  90 |
+|  4 |  240 |  90 |
+|  5 |  220 |  90 |
+|  6 |  150 |  60 |
++----+------+-----+
+6 rows in set (X sec)
+
++------+-------+---+
+| dept | total | r |
++------+-------+---+
+| eng  |   260 | 1 |
+| ops  |   160 | 2 |
+| hr   |    60 | 3 |
++------+-------+---+
+3 rows in set (X sec)
+
++------+---------+
+| dept | a       |
++------+---------+
+| eng  | 86.6667 |
+| ops  | 80.0000 |
++------+---------+
+2 rows in set (X sec)
+
++------+-----+
+| name | a   |
++------+-----+
+| ann  | 100 |
+| ed   |  90 |
+| flo  |  60 |
++------+-----+
+3 rows in set (X sec)
+
++------+---+
+| dept | n |
++------+---+
+| eng  | 3 |
+| ops  | 1 |
++------+---+
+2 rows in set (X sec)
+
++---+-----+
+| n | n*n |
++---+-----+
+| 1 |   1 |
+| 2 |   4 |
+| 3 |   9 |
+| 4 |  16 |
+| 5 |  25 |
++---+-----+
+5 rows in set (X sec)
+
++----+------+-----+
+| id | name | lvl |
++----+------+-----+
+|  1 | ann  |   0 |
+|  2 | bob  |   1 |
+|  3 | cy   |   1 |
+|  4 | di   |   1 |
+|  6 | flo  |   1 |
+|  5 | ed   |   2 |
++----+------+-----+
+6 rows in set (X sec)
+
+ERROR 3636 (HY000): Recursive query aborted after 1001 iterations. Try increasing @@cte_max_recursion_depth to a larger value.
+ERROR 1582 (42000): Incorrect parameter count in the call to native function 'ROW_NUMBER'
+ERROR 1248 (42000): Every derived table must have its own alias
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
++----+----+-------+--------+
+| @a | @b | @nope | @a + 1 |
++----+----+-------+--------+
+|  5 | hi | NULL  |      6 |
++----+----+-------+--------+
+1 row in set (X sec)
+
++----------+--------+
+| @c := 10 | @c * 2 |
++----------+--------+
+|       10 |     20 |
++----------+--------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 5 rows affected (X sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
++----+--------------+
+| id | @r := @r + 1 |
++----+--------------+
+|  1 |            1 |
+|  2 |            2 |
+|  3 |            3 |
+|  4 |            4 |
+|  5 |            5 |
++----+--------------+
+5 rows in set (X sec)
+
++----+
+| id |
++----+
+|  3 |
+|  4 |
+|  5 |
++----+
+3 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 4 rows affected (X sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
++----+
+| id |
++----+
+|  2 |
+|  3 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
+|  4 |
+|  5 |
++----+
+3 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  3 |
+|  3 |
+|  9 |
++----+
+4 rows in set (X sec)
+
++----+
+| id |
++----+
+|  3 |
+|  9 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  9 |
+|  5 |
+|  4 |
++----+
+3 rows in set (X sec)
+
++---+
+| 1 |
++---+
+| 1 |
+| 2 |
++---+
+2 rows in set (X sec)
+
++--------------------------------+-----------------------+---------------------+-----------------+-------------------+----------------------+----------+------------+-----------------+--------------------+-----------------------+----------------+
+| CONCAT_WS('-', 'a', NULL, 'b') | INSTR('foobar','BAR') | LOCATE('o','foo',3) | LPAD('7',3,'0') | RPAD('ab',5,'xy') | LPAD('abcdef',3,'*') | SPACE(2) | ASCII('A') | STRCMP('a','B') | FIELD('b','a','b') | FORMAT(1234567.891,2) | FORMAT(-0.5,0) |
++--------------------------------+-----------------------+---------------------+-----------------+-------------------+----------------------+----------+------------+-----------------+--------------------+-----------------------+----------------+
+| a-b                            |                     4 |                   3 | 007             | abxyx             | abc                  |          |         65 |              -1 |                  2 | 1,234,567.89          | -1             |
++--------------------------------+-----------------------+---------------------+-----------------+-------------------+----------------------+----------+------------+-----------------+--------------------+-----------------------+----------------+
+1 row in set (X sec)
+
++----------+-------------------+--------------------+-------------------+------------------+----------+-------------+-------+--------+---------------+--------------+
+| SIGN(-3) | TRUNCATE(1.999,1) | TRUNCATE(-1.999,0) | TRUNCATE(1234,-2) | PI()             | LOG(2,8) | LOG10(1000) | LN(1) | EXP(0) | DEGREES(PI()) | ISNULL(NULL) |
++----------+-------------------+--------------------+-------------------+------------------+----------+-------------+-------+--------+---------------+--------------+
+|       -1 |               1.9 |                 -1 |              1200 | 3.14159265358979 |        3 |           3 |     0 |      1 |           180 |            1 |
++----------+-------------------+--------------------+-------------------+------------------+----------+-------------+-------+--------+---------------+--------------+
+1 row in set (X sec)
+
++--------------------------+-------------------------+-----------------------+-----------------------+-------------------------+-----------------------+------------------------+-----------------------+-------------------+
+| DAYOFMONTH('2024-03-15') | DAYOFYEAR('2024-03-15') | WEEKDAY('2024-03-15') | DAYNAME('2024-03-15') | MONTHNAME('2024-03-15') | QUARTER('2024-03-15') | LAST_DAY('2024-02-10') | TO_DAYS('2024-03-15') | FROM_DAYS(739326) |
++--------------------------+-------------------------+-----------------------+-----------------------+-------------------------+-----------------------+------------------------+-----------------------+-------------------+
+|                       15 |                      75 |                     4 | Friday                | March                   |                     1 | 2024-02-29             |                739325 | 2024-03-16        |
++--------------------------+-------------------------+-----------------------+-----------------------+-------------------------+-----------------------+------------------------+-----------------------+-------------------+
+1 row in set (X sec)
+
++---------------------------------------------------------------------------------+
+| DATE_FORMAT('2024-03-05 14:07:09', '%Y/%m/%d %H:%i:%s %p %W %b %e %j %h %T %%') |
++---------------------------------------------------------------------------------+
+| 2024/03/05 14:07:09 PM Tuesday Mar 5 065 02 14:07:09 %                          |
++---------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+ERROR 1222 (21000): The used SELECT statements have a different number of columns
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 5 rows affected (X sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
++----+
+| id |
++----+
+|  1 |
+|  2 |
+|  4 |
+|  5 |
++----+
+4 rows in set (X sec)
+
++----+
+| id |
++----+
+|  5 |
+|  2 |
++----+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
+|  3 |
++----+
+2 rows in set (X sec)
+
++----+---+
+| id | g |
++----+---+
+|  1 | 1 |
+|  2 | 1 |
++----+---+
+2 rows in set (X sec)
+
++--------------------------------------------------+--------------------------------------------------+------------------------------------------------------------------+-------------------------------------------------+-------------------------------------------------+
+| TIMESTAMPDIFF(MONTH, '2024-01-31', '2024-02-29') | TIMESTAMPDIFF(MONTH, '2024-01-15', '2024-03-14') | TIMESTAMPDIFF(DAY, '2024-03-01 12:00:00', '2024-03-03 11:00:00') | TIMESTAMPDIFF(YEAR, '2020-06-01', '2024-05-31') | TIMESTAMPDIFF(HOUR, '2024-03-02', '2024-03-01') |
++--------------------------------------------------+--------------------------------------------------+------------------------------------------------------------------+-------------------------------------------------+-------------------------------------------------+
+|                                                0 |                                                1 |                                                                1 |                                               3 |                                             -24 |
++--------------------------------------------------+--------------------------------------------------+------------------------------------------------------------------+-------------------------------------------------+-------------------------------------------------+
+1 row in set (X sec)
+
++-------------------------------------+-----------------------------------------------+
+| TIMESTAMPADD(WEEK, 2, '2024-03-01') | TIMESTAMPADD(MONTH, 1, '2024-01-31 10:00:00') |
++-------------------------------------+-----------------------------------------------+
+| 2024-03-15                          | 2024-02-29 10:00:00                           |
++-------------------------------------+-----------------------------------------------+
+1 row in set (X sec)
+
++------------------------------------------+----------------------------------+------------------------------------------+---------------------------------------+------------------------------------+
+| EXTRACT(YEAR FROM '2024-03-15 10:20:30') | EXTRACT(MONTH FROM '2024-03-15') | EXTRACT(HOUR FROM '2024-03-15 10:20:30') | EXTRACT(YEAR_MONTH FROM '2024-03-15') | EXTRACT(QUARTER FROM '2024-11-02') |
++------------------------------------------+----------------------------------+------------------------------------------+---------------------------------------+------------------------------------+
+|                                     2024 |                                3 |                                       10 |                                202403 |                                  4 |
++------------------------------------------+----------------------------------+------------------------------------------+---------------------------------------+------------------------------------+
+1 row in set (X sec)
+
++---------------------------------------+-----------------------------------------------------------+---------------------------------------+------------------------+
+| STR_TO_DATE('03/15/2024', '%m/%d/%Y') | STR_TO_DATE('15 March 2024 5:07 PM', '%d %M %Y %h:%i %p') | STR_TO_DATE('2024-02-30', '%Y-%m-%d') | STR_TO_DATE('x', '%Y') |
++---------------------------------------+-----------------------------------------------------------+---------------------------------------+------------------------+
+| 2024-03-15                            | 2024-03-15 17:07:00                                       | NULL                                  | NULL                   |
++---------------------------------------+-----------------------------------------------------------+---------------------------------------+------------------------+
+1 row in set (X sec)
+
++------------------------------------------------------+-------------------------------------------------------------------------------+
+| FROM_UNIXTIME(UNIX_TIMESTAMP('2024-03-15 10:20:30')) | UNIX_TIMESTAMP('2024-03-15 10:20:30') - UNIX_TIMESTAMP('2024-03-15 10:20:00') |
++------------------------------------------------------+-------------------------------------------------------------------------------+
+| 2024-03-15 10:20:30                                  |                                                                            30 |
++------------------------------------------------------+-------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                                                                                                                                                                                  |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| emp   | CREATE TABLE `emp` (
+  `id` int NOT NULL,
+  `dept_id` int DEFAULT NULL,
+  `boss` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emp_dept` (`dept_id`),
+  KEY `boss` (`boss`),
+  CONSTRAINT `emp_dept` FOREIGN KEY (`dept_id`) REFERENCES `dept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `emp_ibfk_2` FOREIGN KEY (`boss`) REFERENCES `emp` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`fk`.`emp`, CONSTRAINT `emp_dept` FOREIGN KEY (`dept_id`) REFERENCES `dept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)
+Query OK, 1 row affected, 1 warning (X sec)
+Records: 2  Duplicates: 1  Warnings: 1
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`fk`.`task`, CONSTRAINT `task_ibfk_1` FOREIGN KEY (`emp_id`) REFERENCES `emp` (`id`))
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`fk`.`emp`, CONSTRAINT `emp_dept` FOREIGN KEY (`dept_id`) REFERENCES `dept` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`fk`.`emp`, CONSTRAINT `emp_ibfk_2` FOREIGN KEY (`boss`) REFERENCES `emp` (`id`) ON DELETE SET NULL)
+Query OK, 1 row affected (X sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
++----+---------+------+
+| id | dept_id | boss |
++----+---------+------+
+|  1 |       1 | NULL |
+|  2 |       1 |    1 |
+|  3 |      10 |    1 |
+|  5 |      10 |    3 |
++----+---------+------+
+4 rows in set (X sec)
+
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`fk`.`task`, CONSTRAINT `task_ibfk_1` FOREIGN KEY (`emp_id`) REFERENCES `emp` (`id`))
+Query OK, 1 row affected (X sec)
+
+Query OK, 1 row affected (X sec)
+
++----+---------+------+
+| id | dept_id | boss |
++----+---------+------+
+|  2 |       1 | NULL |
+|  3 |      10 | NULL |
+|  5 |      10 |    3 |
++----+---------+------+
+3 rows in set (X sec)
+
+ERROR 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`fk`.`task`, CONSTRAINT `task_ibfk_1` FOREIGN KEY (`emp_id`) REFERENCES `emp` (`id`))
++----+---------+------+
+| id | dept_id | boss |
++----+---------+------+
+|  2 |       1 | NULL |
+|  3 |      10 | NULL |
+|  5 |      10 |    3 |
++----+---------+------+
+3 rows in set (X sec)
+
++----+--------+
+| id | emp_id |
++----+--------+
+|  1 |      2 |
++----+--------+
+1 row in set (X sec)
+
+ERROR 3730 (HY000): Cannot drop table 'emp' referenced by a foreign key constraint 'task_ibfk_1' on table 'task'.
+ERROR 1701 (42000): Cannot truncate a table referenced in a foreign key constraint (`fk`.`emp`, CONSTRAINT `emp_dept`)
+ERROR 1828 (HY000): Cannot drop column 'dept_id': needed in a foreign key constraint 'emp_dept'
+ERROR 1091 (42000): Can't DROP 'nope'; check that column/key exists
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| task  | CREATE TABLE `task` (
+  `id` int NOT NULL,
+  `emp_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emp_id` (`emp_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
+ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`fk`.`task`, CONSTRAINT `t_e` FOREIGN KEY (`emp_id`) REFERENCES `emp` (`id`))
+Query OK, 2 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+ERROR 1824 (HY000): Failed to open the referenced table 'nothing'
+ERROR 3780 (HY000): Referencing column 'a' and referenced column 'name' in foreign key constraint 'bad2_ibfk_1' are incompatible.
+ERROR 3780 (HY000): Referencing column 'a' and referenced column 'id' in foreign key constraint 'bad3_ibfk_1' are incompatible.
+ERROR 1830 (HY000): Column 'a' cannot be NOT NULL: needed in a foreign key constraint 'bad4_ibfk_1' SET NULL
++------------------+----------------------+-----------------------+----------------------------------------+--------------------------------------+---------------------------------+----------------------------+
+| 'ab' REGEXP '^a' | 'ab' NOT REGEXP 'c$' | 'Hello' RLIKE 'h.llo' | REGEXP_REPLACE('a1b22', '[0-9]+', '#') | REGEXP_SUBSTR('foo123bar', '[0-9]+') | REGEXP_INSTR('foo123', '[0-9]') | REGEXP_LIKE('A', 'a', 'c') |
++------------------+----------------------+-----------------------+----------------------------------------+--------------------------------------+---------------------------------+----------------------------+
+|                1 |                    1 |                     1 | a#b#                                   | 123                                  |                               4 |                          0 |
++------------------+----------------------+-----------------------+----------------------------------------+--------------------------------------+---------------------------------+----------------------------+
+1 row in set (X sec)
+
++------------------------------+------------------------------+--------------------+
+| 'a%b' LIKE 'a|%b' ESCAPE '|' | 'axb' LIKE 'a|%b' ESCAPE '|' | 'a\%b' LIKE 'a\%b' |
++------------------------------+------------------------------+--------------------+
+|                            1 |                            0 |                  1 |
++------------------------------+------------------------------+--------------------+
+1 row in set (X sec)
+
+ERROR 3692 (HY000): Illegal argument to a regular expression.
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                                                                                              |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| acct  | CREATE TABLE `acct` (
+  `id` int NOT NULL,
+  `bal` int DEFAULT NULL,
+  `kind` varchar(5) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `acct_chk_1` CHECK (bal >= 0),
+  CONSTRAINT `kind_ok` CHECK (kind IN ('a','b') OR kind IS NULL),
+  CONSTRAINT `acct_chk_3` CHECK (id > 0 AND id < 1000)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+ERROR 3819 (HY000): Check constraint 'acct_chk_1' is violated.
+ERROR 3819 (HY000): Check constraint 'kind_ok' is violated.
+ERROR 3819 (HY000): Check constraint 'acct_chk_3' is violated.
+Query OK, 1 row affected, 1 warning (X sec)
+Records: 2  Duplicates: 1  Warnings: 1
+
+ERROR 3819 (HY000): Check constraint 'acct_chk_1' is violated.
+Query OK, 1 row affected (X sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+ERROR 3819 (HY000): Check constraint 'acct_chk_1' is violated.
++----+------+------+
+| id | bal  | kind |
++----+------+------+
+|  1 |    5 | a    |
+|  2 | NULL | NULL |
+|  7 |    5 | b    |
++----+------+------+
+3 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Query OK, 1 row affected (X sec)
+
+ERROR 1091 (42000): Can't DROP 'nope'; check that column/key exists
+ERROR 1054 (42S22): Unknown column 'nope' in 'field list'
+Query OK, 0 rows affected (X sec)
+
++------------+------------+--------+------------+
+| TABLE_NAME | TABLE_TYPE | ENGINE | TABLE_ROWS |
++------------+------------+--------+------------+
+| acct       | BASE TABLE | InnoDB |          4 |
+| emp2       | BASE TABLE | InnoDB |          0 |
++------------+------------+--------+------------+
+2 rows in set (X sec)
+
++-------------+------------------+-------------+-----------+------------+
+| column_name | ordinal_position | is_nullable | data_type | column_key |
++-------------+------------------+-------------+-----------+------------+
+| id          |                1 | NO          | int       | PRI        |
+| bal         |                2 | YES         | int       |            |
+| kind        |                3 | YES         | varchar   |            |
++-------------+------------------+-------------+-----------+------------+
+3 rows in set (X sec)
+
++-----------------+-----------------+------------+
+| constraint_name | constraint_type | table_name |
++-----------------+-----------------+------------+
+| acct_chk_1      | CHECK           | acct       |
+| acct_chk_3      | CHECK           | acct       |
+| bal_cap         | CHECK           | acct       |
+| bal_low         | CHECK           | acct       |
+| PRIMARY         | PRIMARY KEY     | acct       |
+| emp2_ibfk_1     | FOREIGN KEY     | emp2       |
+| PRIMARY         | PRIMARY KEY     | emp2       |
++-----------------+-----------------+------------+
+7 rows in set (X sec)
+
++-----------------+------------+-------------+-----------------------+------------------------+
+| constraint_name | table_name | column_name | referenced_table_name | referenced_column_name |
++-----------------+------------+-------------+-----------------------+------------------------+
+| emp2_ibfk_1     | emp2       | d           | acct                  | id                     |
++-----------------+------------+-------------+-----------------------+------------------------+
+1 row in set (X sec)
+
++-----------------+-------------+-------------+
+| constraint_name | update_rule | delete_rule |
++-----------------+-------------+-------------+
+| emp2_ibfk_1     | NO ACTION   | NO ACTION   |
+| emp_dept        | CASCADE     | CASCADE     |
+| emp_ibfk_2      | NO ACTION   | SET NULL    |
+| t_e             | NO ACTION   | RESTRICT    |
++-----------------+-------------+-------------+
+4 rows in set (X sec)
+
++-----------------+------------------------+
+| constraint_name | check_clause           |
++-----------------+------------------------+
+| acct_chk_1      | (bal >= 0)             |
+| acct_chk_3      | (id > 0 AND id < 1000) |
+| bal_cap         | (bal < 100)            |
+| bal_low         | (bal < 6)              |
++-----------------+------------------------+
+4 rows in set (X sec)
+
++------------+--------------+-------------+------------+
+| index_name | seq_in_index | column_name | non_unique |
++------------+--------------+-------------+------------+
+| PRIMARY    |            1 | id          |          0 |
+| d          |            1 | d           |          1 |
++------------+--------------+-------------+------------+
+2 rows in set (X sec)
+
++--------------------+
+| schema_name        |
++--------------------+
+| ck                 |
+| fk                 |
+| information_schema |
+| odku               |
+| p                  |
+| shop               |
+| v                  |
+| win                |
++--------------------+
+8 rows in set (X sec)
+
+ERROR 1109 (42S02): Unknown table 'nope' in information_schema
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 3 rows affected (X sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| p     |          0 | PRIMARY  |            1 | id          | A         |           3 | NULL     | NULL   |      | BTREE      |         |               | YES     | NULL       |
+| p     |          0 | uname    |            1 | name        | A         |           3 | NULL     | NULL   |      | BTREE      |         |               | YES     | NULL       |
+| p     |          1 | g        |            1 | grp         | A         |           2 | NULL     | NULL   | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+3 rows in set (X sec)
+
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| Table | Non_unique | Key_name | Seq_in_index | Column_name | Collation | Cardinality | Sub_part | Packed | Null | Index_type | Comment | Index_comment | Visible | Expression |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+| q     |          0 | PRIMARY  |            1 | id          | A         |           2 | NULL     | NULL   |      | BTREE      |         |               | YES     | NULL       |
+| q     |          1 | pid      |            1 | pid         | A         |           2 | NULL     | NULL   | YES  | BTREE      |         |               | YES     | NULL       |
++-------+------------+----------+--------------+-------------+-----------+-------------+----------+--------+------+------------+---------+---------------+---------+------------+
+2 rows in set (X sec)
+
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+| Name | Engine | Version | Row_format | Rows | Avg_row_length | Data_length | Max_data_length | Index_length | Data_free | Auto_increment | Create_time | Update_time | Check_time | Collation          | Checksum | Create_options | Comment |
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+| p    | InnoDB |      10 | Dynamic    |    3 |              0 |       16384 |               0 |        32768 |         0 | NULL           | NULL        | NULL        | NULL       | utf8mb4_0900_ai_ci | NULL     |                |         |
+| q    | InnoDB |      10 | Dynamic    |    2 |              0 |       16384 |               0 |        16384 |         0 |              3 | NULL        | NULL        | NULL       | utf8mb4_0900_ai_ci | NULL     |                |         |
+| v    | NULL   | NULL    | NULL       | NULL | NULL           | NULL        | NULL            | NULL         | NULL      | NULL           | NULL        | NULL        | NULL       | NULL               | NULL     | NULL           | VIEW    |
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+3 rows in set (X sec)
+
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+| Name | Engine | Version | Row_format | Rows | Avg_row_length | Data_length | Max_data_length | Index_length | Data_free | Auto_increment | Create_time | Update_time | Check_time | Collation          | Checksum | Create_options | Comment |
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+| p    | InnoDB |      10 | Dynamic    |    3 |              0 |       16384 |               0 |        32768 |         0 | NULL           | NULL        | NULL        | NULL       | utf8mb4_0900_ai_ci | NULL     |                |         |
++------+--------+---------+------------+------+----------------+-------------+-----------------+--------------+-----------+----------------+-------------+-------------+------------+--------------------+----------+----------------+---------+
+1 row in set (X sec)
+
++--------------+------------+
+| Tables_in_sh | Table_type |
++--------------+------------+
+| p            | BASE TABLE |
+| q            | BASE TABLE |
+| v            | VIEW       |
++--------------+------------+
+3 rows in set (X sec)
+
++------------------+
+| Tables_in_sh (q) |
++------------------+
+| q                |
++------------------+
+1 row in set (X sec)
+
++---------------+
+| Database (s%) |
++---------------+
+| sh            |
+| shop          |
++---------------+
+2 rows in set (X sec)
+
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| name  | varchar(10) | NO   | UNI | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+1 row in set (X sec)
+
++-------+-------------+--------------------+------+-----+---------+-------+---------------------------------+---------+
+| Field | Type        | Collation          | Null | Key | Default | Extra | Privileges                      | Comment |
++-------+-------------+--------------------+------+-----+---------+-------+---------------------------------+---------+
+| id    | int         | NULL               | NO   | PRI | NULL    |       | select,insert,update,references |         |
+| name  | varchar(10) | utf8mb4_0900_ai_ci | NO   | UNI | NULL    |       | select,insert,update,references |         |
+| grp   | int         | NULL               | YES  | MUL | NULL    |       | select,insert,update,references |         |
++-------+-------------+--------------------+------+-----+---------+-------+---------------------------------+---------+
+3 rows in set (X sec)
+
++----------+----------------------------------------------------------------+
+| Database | Create Database                                                |
++----------+----------------------------------------------------------------+
+| sh       | CREATE DATABASE `sh` /*!40100 DEFAULT CHARACTER SET utf8mb4 */ |
++----------+----------------------------------------------------------------+
+1 row in set (X sec)
+
++------+-------------------------------------------+----------------------+----------------------+
+| View | Create View                               | character_set_client | collation_connection |
++------+-------------------------------------------+----------------------+----------------------+
+| v    | CREATE VIEW `v` AS SELECT id, name FROM p | utf8mb4              | utf8mb4_0900_ai_ci   |
++------+-------------------------------------------+----------------------+----------------------+
+1 row in set (X sec)
+
+ERROR 1347 (HY000): 'sh.p' is not VIEW
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++-----+----+------+-----+
+| age | id | name | grp |
++-----+----+------+-----+
+|   7 |  1 | a    |   1 |
+|   7 |  2 | b    |   1 |
+|   7 |  3 | c    |   2 |
++-----+----+------+-----+
+3 rows in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                                 |
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| p     | CREATE TABLE `p` (
+  `age` int DEFAULT '7',
+  `id` int NOT NULL,
+  `name` varchar(10) NOT NULL,
+  `email` varchar(20) DEFAULT NULL,
+  `grp` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uname` (`name`),
+  KEY `g` (`grp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| grp   | int         | NO   | MUL | NULL    |       |
+| id    | int         | NO   | PRI | NULL    |       |
+| name  | varchar(10) | NO   | UNI | NULL    |       |
+| email | varchar(20) | YES  |     | NULL    |       |
+| years | int         | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+5 rows in set (X sec)
+
++-----+----+------+-------+-------+
+| grp | id | name | email | years |
++-----+----+------+-------+-------+
+|   1 |  2 | b    | NULL  |     7 |
++-----+----+------+-------+-------+
+1 row in set (X sec)
+
++-----+----+------+-------+-------+
+| grp | id | name | email | years |
++-----+----+------+-------+-------+
+|   1 |  1 | a    | NULL  |     7 |
+|   1 |  2 | b    | NULL  |     7 |
++-----+----+------+-------+-------+
+2 rows in set (X sec)
+
+ERROR 1054 (42S22): Unknown column 'nope' in 'p'
+Query OK, 1 row affected (X sec)
+
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                          |
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| q     | CREATE TABLE `q` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `pid` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pid` (`pid`),
+  CONSTRAINT `q_ibfk_1` FOREIGN KEY (`pid`) REFERENCES `p` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 1 row affected (X sec)
+
+Database changed
+
+Query OK, 0 rows affected (X sec)
+
+Query OK, 2 rows affected (X sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+ERROR 3140 (22032): Invalid JSON text: "Invalid value." at position 0 in value for column 'doc'.
+ERROR 3105 (HY000): The value specified for generated column 'total' in table 'ev' is not allowed.
+ERROR 3105 (HY000): The value specified for generated column 'total' in table 'ev' is not allowed.
++----+------------------------------------------------------------+-------+-------+
+| id | doc                                                        | total | label |
++----+------------------------------------------------------------+-------+-------+
+|  1 | {"a": "hi", "b": [1, 2, {"x": true}], "d": 1.5, "n": null} | 10.00 | #1:4  |
+|  2 | {"a": "yo", "tags": ["x", "y"]}                            | 30.00 | #2:3  |
++----+------------------------------------------------------------+-------+-------+
+2 rows in set (X sec)
+
++----+------------+-------------+-------------------------------+-----------------------------+-----------------------------+
+| id | doc->'$.a' | doc->>'$.a' | JSON_EXTRACT(doc, '$.b[2].x') | JSON_EXTRACT(doc, '$.b[*]') | JSON_EXTRACT(doc, '$.nope') |
++----+------------+-------------+-------------------------------+-----------------------------+-----------------------------+
+|  1 | "hi"       | hi          | true                          | [1, 2, {"x": true}]         | NULL                        |
+|  2 | "yo"       | yo          | NULL                          | NULL                        | NULL                        |
++----+------------+-------------+-------------------------------+-----------------------------+-----------------------------+
+2 rows in set (X sec)
+
++----+
+| id |
++----+
+|  2 |
++----+
+1 row in set (X sec)
+
++----+
+| id |
++----+
+|  1 |
++----+
+1 row in set (X sec)
+
++----------------+------------------+----------------------+-----------------+-----------------+
+| JSON_TYPE(doc) | JSON_LENGTH(doc) | JSON_KEYS(doc)       | JSON_VALID(doc) | JSON_VALID('x') |
++----------------+------------------+----------------------+-----------------+-----------------+
+| OBJECT         |                4 | ["a", "b", "d", "n"] |               1 |               0 |
+| OBJECT         |                2 | ["a", "tags"]        |               1 |               0 |
++----------------+------------------+----------------------+-----------------+-----------------+
+2 rows in set (X sec)
+
++------------------------------------------------------------------+---------------------------------+-------------------+---------------------+
+| JSON_OBJECT('k', 1, 'a', JSON_ARRAY(1, 'two', NULL), 's', 'str') | JSON_ARRAY(JSON_OBJECT('z', 1)) | JSON_QUOTE('a"b') | JSON_UNQUOTE('"q"') |
++------------------------------------------------------------------+---------------------------------+-------------------+---------------------+
+| {"a": [1, "two", null], "k": 1, "s": "str"}                      | [{"z": 1}]                      | "a\"b"            | q                   |
++------------------------------------------------------------------+---------------------------------+-------------------+---------------------+
+1 row in set (X sec)
+
++---------------------------------------------------------------------+--------------------------------------------------------------------+-----------------------------------------------------------+----------------------------------------------+
+| JSON_SET(doc, '$.a', 'new', '$.c', 5)                               | JSON_INSERT(doc, '$.a', 'no', '$.z', 1)                            | JSON_REPLACE(doc, '$.a', 'r', '$.zz', 1)                  | JSON_REMOVE(doc, '$.a', '$.b[0]')            |
++---------------------------------------------------------------------+--------------------------------------------------------------------+-----------------------------------------------------------+----------------------------------------------+
+| {"a": "new", "b": [1, 2, {"x": true}], "c": 5, "d": 1.5, "n": null} | {"a": "hi", "b": [1, 2, {"x": true}], "d": 1.5, "n": null, "z": 1} | {"a": "r", "b": [1, 2, {"x": true}], "d": 1.5, "n": null} | {"b": [2, {"x": true}], "d": 1.5, "n": null} |
++---------------------------------------------------------------------+--------------------------------------------------------------------+-----------------------------------------------------------+----------------------------------------------+
+1 row in set (X sec)
+
++-------------------------------------+-----------------------------------+----------------------------------------------+----------------------------------------------+
+| JSON_CONTAINS(doc, '"x"', '$.tags') | JSON_CONTAINS(doc, '{"a": "yo"}') | JSON_CONTAINS_PATH(doc, 'one', '$.a', '$.q') | JSON_CONTAINS_PATH(doc, 'all', '$.a', '$.q') |
++-------------------------------------+-----------------------------------+----------------------------------------------+----------------------------------------------+
+|                                   1 |                                 1 |                                            1 |                                            0 |
++-------------------------------------+-----------------------------------+----------------------------------------------+----------------------------------------------+
+1 row in set (X sec)
+
++---------------------------------------+-------------------------------------------------------+
+| JSON_ARRAY_APPEND(doc, '$.tags', 'z') | JSON_MERGE_PATCH('{"a":1,"b":2}', '{"b":null,"c":3}') |
++---------------------------------------+-------------------------------------------------------+
+| {"a": "yo", "tags": ["x", "y", "z"]}  | {"a": 1, "c": 3}                                      |
++---------------------------------------+-------------------------------------------------------+
+1 row in set (X sec)
+
+Query OK, 1 row affected (X sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+ERROR 3105 (HY000): The value specified for generated column 'total' in table 'ev' is not allowed.
++----+--------------------------------------------+--------+-------+
+| id | doc                                        | total  | label |
++----+--------------------------------------------+--------+-------+
+|  2 | {"a": "yo", "hits": 1, "tags": ["x", "y"]} | 100.00 | #2:10 |
++----+--------------------------------------------+--------+-------+
+1 row in set (X sec)
+
++-------------------+----------------------------+
+| JSON_ARRAYAGG(id) | JSON_OBJECTAGG(label, qty) |
++-------------------+----------------------------+
+| [1, 2]            | {"#1:4": 4, "#2:10": 10}   |
++-------------------+----------------------------+
+1 row in set (X sec)
+
+Query OK, 0 rows affected (X sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+ERROR 1054 (42S22): Unknown column 'nope' in 'field list'
++----+-----+-----+
+| id | qty | dbl |
++----+-----+-----+
+|  1 |   4 |   8 |
+|  2 |  10 |  20 |
++----+-----+-----+
+2 rows in set (X sec)
+
++-------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Table | Create Table                                                                                                                                                                                                                                                                                                                                                                                        |
++-------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ev    | CREATE TABLE `ev` (
+  `id` int NOT NULL,
+  `doc` json DEFAULT NULL,
+  `price` decimal(8,2) DEFAULT NULL,
+  `qty` int DEFAULT NULL,
+  `total` decimal(10,2) GENERATED ALWAYS AS (price * qty) STORED,
+  `label` varchar(30) GENERATED ALWAYS AS (CONCAT('#', id, ':', qty)) VIRTUAL,
+  `dbl` int GENERATED ALWAYS AS (qty * 2) VIRTUAL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 |
++-------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+1 row in set (X sec)
+
++-------+---------------+------+-----+---------+-------------------+
+| Field | Type          | Null | Key | Default | Extra             |
++-------+---------------+------+-----+---------+-------------------+
+| id    | int           | NO   | PRI | NULL    |                   |
+| doc   | json          | YES  |     | NULL    |                   |
+| price | decimal(8,2)  | YES  |     | NULL    |                   |
+| qty   | int           | YES  |     | NULL    |                   |
+| total | decimal(10,2) | YES  |     | NULL    | STORED GENERATED  |
+| label | varchar(30)   | YES  |     | NULL    | VIRTUAL GENERATED |
+| dbl   | int           | YES  |     | NULL    | VIRTUAL GENERATED |
++-------+---------------+------+-----+---------+-------------------+
+7 rows in set (X sec)
+
+ERROR 3141 (22032): Invalid JSON text in argument 1 to function JSON_EXTRACT: "Invalid value." at position 0.
+ERROR 3143 (42000): Invalid JSON path expression. The error is around character position 1.

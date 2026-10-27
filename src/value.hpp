@@ -26,6 +26,7 @@ struct Value {
     int64_t i = 0;
     double d = 0.0;
     std::string s;
+    bool json = false;  // Text only: the text is a JSON document (JSON column / JSON_* result)
     int scale = -1;  // Real only: >= 0 means exact DECIMAL with this many fractional digits
 
     static Value integer(int64_t v) { Value x; x.t = T::Int; x.i = v; return x; }

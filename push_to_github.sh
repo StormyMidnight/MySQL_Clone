@@ -29,21 +29,28 @@ git add .
 if git diff-index --quiet HEAD -- 2>/dev/null; then
     echo "No changes to commit."
 else
-    git commit -m "Initial commit: MySQL Clone"
+    git commit -m "Update project files"
 fi
 
-# Get default repository name from current directory
+# Prompt for the existing repository name or URL
 DEFAULT_REPO_NAME=$(basename "$(pwd)")
-read -p "Enter GitHub repository name [default: $DEFAULT_REPO_NAME]: " REPO_NAME
-REPO_NAME=${REPO_NAME:-$DEFAULT_REPO_NAME}
+read -p "Enter your GitHub username/organization and repository name (e.g., username/$DEFAULT_REPO_NAME): " REPO_PATH
 
-read -p "Make repository private? (y/N): " IS_PRIVATE
-VISIBILITY="--public"
-if [[ "$IS_PRIVATE" =~ ^[Yy]$ ]]; then
-    VISIBILITY="--private"
+if [ -z "$REPO_PATH" ]; then
+    echo "Error: Repository path cannot be empty."
+    exit 1
 fi
 
-echo "Creating GitHub repository '$REPO_NAME'..."
-gh repo create "$REPO_NAME" "$VISIBILITY" --source=. --remote=origin --push
+# Set remote origin if it doesn't already exist
+if git remote | grep -q "^origin$"; then
+    echo "Remote 'origin' already exists."
+else
+    echo "Adding remote origin..."
+    git remote add origin "https://github.com/$REPO_PATH.git"
+fi
 
-echo "Successfully initialized and pushed your project to GitHub!"
+# Push to the existing repository
+echo "Pushing to GitHub..."
+git push -u origin main
+
+echo "Successfully pushed your project to GitHub!"

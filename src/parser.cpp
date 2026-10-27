@@ -14,7 +14,7 @@ namespace {
 	bool reserved(const std::string& w) {
 		static const std::set<std::string> r = {
 			"FROM", "WHERE", "GROUP", "HAVING", "ORDER", "LIMIT", "JOIN", "INNER", "LEFT", "RIGHT", "CROSS",
-			"OUTER", "ON", "UNION", "SET", "VALUES", "AS", "AND", "OR", "NOT", "USING", "NATURAL", "FULL",
+			"OUTER", "ON", "UNION", "INTERSECT", "EXCEPT", "SET", "VALUES", "AS", "AND", "OR", "NOT", "USING", "NATURAL", "FULL",
 			"OFFSET", "SELECT", "INTO", "DISTINCT", "WHEN", "THEN", "ELSE", "END", "IS", "IN", "LIKE",
 			"BETWEEN", "DIV", "MOD" };
 		return r.count(upper(w)) > 0;
@@ -108,7 +108,7 @@ namespace {
 					continue;
 				}
 				bool neg = false;
-				if (isKw("NOT") && (isKwAt(1, "IN") || isKwAt(1, "BETWEEN") || isKwAt(1, "LIKE"))) { neg = true; adv(); }
+				if (isKw("NOT") && (isKwAt(1, "IN") || isKwAt(1, "BETWEEN") || isKwAt(1, "LIKE") || isKwAt(1, "REGEXP") || isKwAt(1, "RLIKE"))) { neg = true; adv(); }
 				if (acceptKw("IN")) {
 					auto e = mk(EK::In); e->neg = neg; e->args.push_back(std::move(l));
 					expectSym("(");
@@ -127,7 +127,15 @@ namespace {
 				else if (acceptKw("LIKE")) {
 					auto e = mk(EK::Like); e->neg = neg; e->args.push_back(std::move(l));
 					e->args.push_back(addExpr());
+					if (acceptKw("ESCAPE")) e->args.push_back(addExpr());
 					l = std::move(e);
+				}
+				else if (acceptKw("REGEXP") || acceptKw("RLIKE")) {
+					auto f = mk(EK::Func);
+					f->name = neg ? "NOT_REGEXP" : "REGEXP_LIKE";
+					f->args.push_back(std::move(l));
+					f->args.push_back(addExpr());
+					l = std::move(f);
 				}
 				else break;
 			}
@@ -172,6 +180,20 @@ namespace {
 			return Value::real(std::strtod(tk.text.c_str(), nullptr));
 		}
 		ExprP primary() {
+			auto e = primary0();
+			while (isSym("->") || isSym("->>")) {  // col -> '$.path' [->> unquoted]
+				bool unq = isSym("->>");
+				adv();
+				auto f = mk(EK::Func);
+				f->name = "JSON_EXTRACT";
+				f->args.push_back(std::move(e));
+				f->args.push_back(primary0());
+				if (unq) { auto u = mk(EK::Func); u->name = "JSON_UNQUOTE"; u->args.push_back(std::move(f)); e = std::move(u); }
+				else e = std::move(f);
+			}
+			return e;
+		}
+		ExprP primary0() {
 			const Token& tk = cur();
 			if (tk.type == Tok::Num) { Value v = numLit(tk); adv(); return lit(v); }
 			if (tk.type == Tok::Str) { Value v = Value::text(tk.text); adv(); return lit(v); }
@@ -198,6 +220,7 @@ namespace {
 				auto f = mk(EK::Func);
 				f->name = "@@VAR";
 				f->table = (sys ? "" : "@") + nm;
+				if (!sys && acceptSym(":=")) { f->name = "@@ASSIGN"; f->args.push_back(expr()); }
 				return f;
 			}
 			if (isSym("(") && isKwAt(1, "SELECT")) {
@@ -230,12 +253,50 @@ namespace {
 			}
 			fail();
 		}
+		FrameBound frameBound() {
+			FrameBound b;
+			if (acceptKw("UNBOUNDED")) {
+				if (acceptKw("PRECEDING")) b.k = FrameBound::K::UnboundedPreceding;
+				else { expectKw("FOLLOWING"); b.k = FrameBound::K::UnboundedFollowing; }
+			}
+			else if (acceptKw("CURRENT")) { expectKw("ROW"); b.k = FrameBound::K::CurrentRow; }
+			else {
+				b.n = intTok();
+				if (acceptKw("PRECEDING")) b.k = FrameBound::K::Preceding;
+				else { expectKw("FOLLOWING"); b.k = FrameBound::K::Following; }
+			}
+			return b;
+		}
 		ExprP func() {
+			auto f = funcCore();
+			if (acceptKw("OVER")) {
+				f->win = std::make_shared<WinSpec>();
+				WinSpec& w = *f->win;
+				expectSym("(");
+				if (acceptKw("PARTITION")) { expectKw("BY"); do w.part.push_back(expr()); while (acceptSym(",")); }
+				if (acceptKw("ORDER")) orderBy(w.order);
+				if (isKw("ROWS") || isKw("RANGE")) {
+					w.hasFrame = true;
+					w.rows = isKw("ROWS");
+					adv();
+					if (acceptKw("BETWEEN")) { w.lo = frameBound(); expectKw("AND"); w.hi = frameBound(); }
+					else { w.lo = frameBound(); w.hi = FrameBound{ FrameBound::K::CurrentRow, 0 }; }
+				}
+				expectSym(")");
+			}
+			return f;
+		}
+		ExprP funcCore() {
 			auto f = mk(EK::Func);
 			f->name = upper(cur().text);
 			adv(); adv();
 			if (acceptSym(")")) return f;
 			if (isSym("*")) { adv(); f->star = true; expectSym(")"); return f; }
+			if ((f->name == "TIMESTAMPDIFF" || f->name == "TIMESTAMPADD" || f->name == "EXTRACT") && cur().type == Tok::Ident) {
+				f->args.push_back(lit(Value::text(upper(cur().text))));  // bare unit keyword
+				adv();
+				if (f->name == "EXTRACT") expectKw("FROM"); else expectSym(",");
+			}
 			if (acceptKw("DISTINCT")) f->distinct = true;
 			do f->args.push_back(expr()); while (acceptSym(","));
 			if (acceptKw("SEPARATOR")) { if (cur().type != Tok::Str) fail(); f->table = cur().text; adv(); }
@@ -255,6 +316,16 @@ namespace {
 
 		TableRef tableRef() {
 			TableRef r;
+			if (isSym("(")) {  // derived table
+				adv();
+				expectKw("SELECT");
+				r.derived = selectBody();
+				expectSym(")");
+				if (acceptKw("AS")) r.alias = ident();
+				else if (aliasStart()) r.alias = aliasName();
+				else throw SqlError(1248, "42000", "Every derived table must have its own alias");
+				return r;
+			}
 			tableName(r.db, r.name);
 			if (acceptKw("AS")) r.alias = ident();
 			else if (aliasStart()) r.alias = aliasName();
@@ -324,14 +395,39 @@ namespace {
 			}
 			return s;
 		}
-		std::unique_ptr<SelectStmt> selectBody() {
-			auto s = selectCore();
+		int parenN_ = 0;
+		// "(SELECT ...)" as a query-chain member: wrapped as SELECT * FROM (inner) _pN so its own ORDER BY / LIMIT stay local.
+		std::unique_ptr<SelectStmt> parenMember() {
+			expectSym("(");
+			expectKw("SELECT");
+			auto inner = selectBody();
+			expectSym(")");
+			auto w = std::make_unique<SelectStmt>();
+			SelItem it;
+			it.star = true;
+			it.text = "*";
+			w->items.push_back(std::move(it));
+			w->hasFrom = true;
+			w->from.derived = std::move(inner);
+			w->from.alias = "_p" + std::to_string(++parenN_);
+			if (acceptKw("ORDER")) orderBy(w->order);
+			if (acceptKw("LIMIT")) {
+				int64_t a = intTok();
+				if (acceptSym(",")) { w->offset = a; w->limit = intTok(); }
+				else { w->limit = a; if (acceptKw("OFFSET")) w->offset = intTok(); }
+			}
+			return w;
+		}
+		std::unique_ptr<SelectStmt> selectBody() { return selectChainFrom(selectCore()); }
+		std::unique_ptr<SelectStmt> selectChainFrom(std::unique_ptr<SelectStmt> s) {
 			SelectStmt* last = s.get();
-			while (acceptKw("UNION")) {
+			while (isKw("UNION") || isKw("INTERSECT") || isKw("EXCEPT")) {
+				last->setOp = isKw("UNION") ? 0 : isKw("INTERSECT") ? 1 : 2;
+				adv();
 				last->unionAll = acceptKw("ALL");
 				if (!last->unionAll) acceptKw("DISTINCT");
-				expectKw("SELECT");
-				last->next = selectCore();
+				if (isSym("(")) last->next = parenMember();
+				else { expectKw("SELECT"); last->next = selectCore(); }
 				last = last->next.get();
 			}
 			if (last != s.get()) {  // a trailing ORDER BY / LIMIT applies to the whole UNION
@@ -379,6 +475,7 @@ namespace {
 			if (ints.count(base)) c.type = CType::Int;
 			else if (reals.count(base)) c.type = CType::Real;
 			else if (texts.count(base)) c.type = CType::Text;
+			else if (base == "JSON") c.type = CType::Text;
 			else if (base == "DATE") c.type = CType::Date;
 			else if (base == "DATETIME" || base == "TIMESTAMP") c.type = CType::DateTime;
 			else fail();
@@ -434,18 +531,72 @@ namespace {
 				else if (acceptKw("CHARACTER")) { expectKw("SET"); ident(); }
 				else if (acceptKw("CHARSET")) ident();
 				else if (acceptKw("ON")) { expectKw("UPDATE"); ident(); if (acceptSym("(")) expectSym(")"); }
+				else if (acceptKw("CHECK")) c.check = checkText();
+				else if (isKw("GENERATED") || (isKw("AS") && isSymAt(1, "("))) {
+					if (acceptKw("GENERATED")) expectKw("ALWAYS");
+					expectKw("AS");
+					c.gen = checkText();
+					if (acceptKw("STORED")) c.genStored = true; else acceptKw("VIRTUAL");
+				}
+				else if (acceptKw("REFERENCES")) {  // inline column REFERENCES is parsed and ignored, as in MySQL
+					std::string a, b;
+					tableName(a, b);
+					if (isSym("(")) identList();
+					while (acceptKw("ON")) { adv(); if (acceptKw("SET") || acceptKw("NO")) adv(); else adv(); }
+				}
 				else if (acceptKw("UNSIGNED")) c.typeName += " unsigned";
 				else if (acceptKw("ZEROFILL") || acceptKw("SIGNED")) {}
 				else break;
 			}
 			return c;
 		}
+		std::string pendingCons_;
+		// CHECK ( expr ): returns the source text of expr
+		std::string checkText() {
+			expectSym("(");
+			size_t a = cur().pos;
+			expr();
+			size_t b = cur().pos;
+			expectSym(")");
+			std::string t = q_.substr(a, b - a);
+			while (!t.empty() && std::isspace(static_cast<unsigned char>(t.back()))) t.pop_back();
+			if (isKw("NOT") && isKwAt(1, "ENFORCED")) { adv(); adv(); t.clear(); }
+			else acceptKw("ENFORCED");
+			return t;
+		}
+		FkDef fkDef(const std::string& name) {
+			FkDef f;
+			f.name = name;
+			expectKw("FOREIGN");
+			expectKw("KEY");
+			if (!isSym("(")) ident();  // index name
+			f.cols = identList();
+			expectKw("REFERENCES");
+			tableName(f.refDb, f.refTable);
+			if (isSym("(")) f.refCols = identList();
+			for (;;) {
+				if (acceptKw("MATCH")) { ident(); continue; }
+				if (!acceptKw("ON")) break;
+				bool del = acceptKw("DELETE");
+				if (!del) expectKw("UPDATE");
+				int act = 0;
+				if (acceptKw("CASCADE")) act = 1;
+				else if (acceptKw("SET")) { if (acceptKw("NULL")) act = 2; else { expectKw("DEFAULT"); act = 4; } }
+				else if (acceptKw("RESTRICT")) act = 3;
+				else { expectKw("NO"); expectKw("ACTION"); act = 0; }
+				(del ? f.onDelete : f.onUpdate) = act;
+			}
+			return f;
+		}
 		void tableItem(Stmt& s) {
-			if (isKw("PRIMARY")) { adv(); expectKw("KEY"); s.pkCols = identList(); skipItem(); }
+			if (isKw("PRIMARY")) { adv(); expectKw("KEY"); s.pkCols = identList(); skipItem(); pendingCons_.clear(); }
 			else if (isKw("UNIQUE")) {
 				adv();
 				if (!acceptKw("KEY")) acceptKw("INDEX");
-				if (!isSym("(")) ident();
+				std::string un = pendingCons_;
+				pendingCons_.clear();
+				if (!isSym("(")) un = ident();
+				s.uniqueNames.push_back(un);
 				s.uniqueKeys.push_back(identList());
 				skipItem();
 			}
@@ -458,10 +609,18 @@ namespace {
 				s.keys.emplace_back(nm, cols);
 				skipItem();
 			}
-			else if (isKw("FOREIGN") || isKw("FULLTEXT") || isKw("CHECK")) skipItem();
+			else if (isKw("FOREIGN")) { s.fks.push_back(fkDef(pendingCons_)); pendingCons_.clear(); }
+			else if (isKw("CHECK")) {
+				adv();
+				std::string t = checkText();
+				if (!t.empty()) s.checks.emplace_back(pendingCons_, t);
+				pendingCons_.clear();
+			}
+			else if (isKw("FULLTEXT")) skipItem();
 			else if (isKw("CONSTRAINT")) {
 				adv();
-				if (!isKw("PRIMARY") && !isKw("UNIQUE") && !isKw("FOREIGN") && !isKw("CHECK")) ident();
+				pendingCons_.clear();
+				if (!isKw("PRIMARY") && !isKw("UNIQUE") && !isKw("FOREIGN") && !isKw("CHECK")) pendingCons_ = ident();
 				tableItem(s);
 			}
 			else s.cols.push_back(columnDef());
@@ -477,6 +636,7 @@ namespace {
 		}
 		void insert(Stmt& s) {
 			s.k = SK::Insert;
+			if (acceptKw("IGNORE")) s.ignore = true;
 			acceptKw("INTO");
 			tableName(s.db, s.name);
 			if (isSym("(")) s.insCols = identList();
@@ -491,6 +651,15 @@ namespace {
 			}
 			else if (acceptKw("SELECT")) s.sel = selectBody();
 			else fail();
+			if (acceptKw("ON")) {
+				expectKw("DUPLICATE"); expectKw("KEY"); expectKw("UPDATE");
+				do {
+					std::string c = ident();
+					if (acceptSym(".")) c = ident();
+					expectSym("=");
+					s.onDup.emplace_back(c, expr());
+				} while (acceptSym(","));
+			}
 		}
 		void update(Stmt& s) {
 			s.k = SK::Update;
@@ -514,7 +683,13 @@ namespace {
 			s.k = SK::AlterTable;
 			tableName(s.db, s.name);
 			if (acceptKw("ADD")) {
-				if (isKw("UNIQUE") || isKw("INDEX") || isKw("KEY")) {
+				if (isKw("CONSTRAINT") || isKw("FOREIGN") || isKw("CHECK")) {
+					std::string cn;
+					if (acceptKw("CONSTRAINT") && !isKw("FOREIGN") && !isKw("CHECK")) cn = ident();
+					if (acceptKw("CHECK")) { s.checks.emplace_back(cn, checkText()); s.op = "ADDCHECK"; }
+					else { s.fks.push_back(fkDef(cn)); s.op = "ADDFK"; }
+				}
+				else if (isKw("UNIQUE") || isKw("INDEX") || isKw("KEY")) {
 					bool uq = acceptKw("UNIQUE");
 					if (!acceptKw("KEY")) acceptKw("INDEX");
 					if (!isSym("(")) s.newName = ident();
@@ -528,25 +703,59 @@ namespace {
 					s.idxCols = identList();
 					s.op = "PK";
 				}
-				else { acceptKw("COLUMN"); s.op = "ADD"; s.col = columnDef(); }
+				else { acceptKw("COLUMN"); s.op = "ADD"; s.col = columnDef(); colPlace(s); }
 			}
 			else if (acceptKw("DROP")) {
 				if (isKw("PRIMARY")) { adv(); expectKw("KEY"); s.op = "DROPPK"; }
+				else if (acceptKw("FOREIGN")) { expectKw("KEY"); s.op = "DROPFK"; s.newName = ident(); }
+				else if (acceptKw("CONSTRAINT") || acceptKw("CHECK")) { s.op = "DROPFK"; s.newName = ident(); }
 				else if (acceptKw("INDEX") || acceptKw("KEY")) { s.op = "DROPINDEX"; s.newName = ident(); }
 				else { acceptKw("COLUMN"); s.op = "DROP"; s.newName = ident(); }
 			}
-			else if (acceptKw("MODIFY")) { acceptKw("COLUMN"); s.op = "MODIFY"; s.col = columnDef(); }
-			else if (acceptKw("CHANGE")) { acceptKw("COLUMN"); s.op = "CHANGE"; s.newName = ident(); s.col = columnDef(); }
+			else if (acceptKw("MODIFY")) { acceptKw("COLUMN"); s.op = "MODIFY"; s.col = columnDef(); colPlace(s); }
+			else if (acceptKw("CHANGE")) { acceptKw("COLUMN"); s.op = "CHANGE"; s.newName = ident(); s.col = columnDef(); colPlace(s); }
 			else if (acceptKw("RENAME")) {
 				if (acceptKw("COLUMN")) { s.op = "RENAMECOL"; s.newName = ident(); expectKw("TO"); s.col.name = ident(); }
 				else { if (!acceptKw("TO")) acceptKw("AS"); s.op = "RENAME"; s.newName = ident(); }
 			}
 			else fail();
 		}
+		std::string strLit() {
+			if (cur().type != Tok::Str) fail();
+			std::string v = cur().text;
+			adv();
+			return v;
+		}
+		void colPlace(Stmt& s) {  // [FIRST | AFTER col]
+			if (acceptKw("FIRST")) s.first = true;
+			else if (acceptKw("AFTER")) s.after = ident();
+		}
 		void show(Stmt& s) {
-			if (acceptKw("DATABASES") || acceptKw("SCHEMAS")) s.k = SK::ShowDbs;
-			else if (acceptKw("TABLES")) { s.k = SK::ShowTables; if (acceptKw("FROM") || acceptKw("IN")) s.db = ident(); }
-			else if (acceptKw("CREATE")) { expectKw("TABLE"); s.k = SK::ShowCreate; tableName(s.db, s.name); }
+			s.full = acceptKw("FULL");
+			if (acceptKw("DATABASES") || acceptKw("SCHEMAS")) { s.k = SK::ShowDbs; if (acceptKw("LIKE")) s.like = strLit(); }
+			else if (acceptKw("TABLES")) {
+				s.k = SK::ShowTables;
+				if (acceptKw("FROM") || acceptKw("IN")) s.db = ident();
+				if (acceptKw("LIKE")) s.like = strLit();
+			}
+			else if (isKw("TABLE") && isKwAt(1, "STATUS")) {
+				adv(); adv();
+				s.k = SK::ShowTableStatus;
+				if (acceptKw("FROM") || acceptKw("IN")) s.db = ident();
+				if (acceptKw("LIKE")) s.like = strLit();
+			}
+			else if (isKw("INDEX") || isKw("INDEXES") || isKw("KEYS")) {
+				adv();
+				if (!(acceptKw("FROM") || acceptKw("IN"))) fail();
+				s.k = SK::ShowIndex;
+				tableName(s.db, s.name);
+				if (acceptKw("FROM") || acceptKw("IN")) s.db = ident();
+			}
+			else if (acceptKw("CREATE")) {
+				if (acceptKw("TABLE")) { s.k = SK::ShowCreate; tableName(s.db, s.name); }
+				else if (acceptKw("DATABASE") || acceptKw("SCHEMA")) { s.k = SK::ShowCreateDb; s.name = ident(); }
+				else { expectKw("VIEW"); s.k = SK::ShowCreateView; tableName(s.db, s.name); }
+			}
 			else if (acceptKw("WARNINGS")) s.k = SK::ShowWarnings;
 			else if (isKw("GLOBAL") || isKw("SESSION") || isKw("VARIABLES") || isKw("STATUS")) {
 				if (!acceptKw("GLOBAL")) acceptKw("SESSION");
@@ -563,6 +772,7 @@ namespace {
 				s.k = SK::ShowColumns;
 				tableName(s.db, s.name);
 				if (acceptKw("FROM") || acceptKw("IN")) s.db = ident();
+				if (acceptKw("LIKE")) s.like = strLit();
 			}
 		}
 	};
@@ -571,7 +781,29 @@ namespace {
 		Stmt s;
 		if (cur().type == Tok::End) return s;
 		if (acceptKw("SELECT")) { s.k = SK::Select; s.sel = selectBody(); }
+		else if (isSym("(") && isKwAt(1, "SELECT")) { s.k = SK::Select; s.sel = selectChainFrom(parenMember()); }
+		else if (acceptKw("WITH")) {
+			s.k = SK::Select;
+			bool rec = acceptKw("RECURSIVE");
+			std::vector<CteDef> defs;
+			do {
+				CteDef d;
+				d.name = ident();
+				if (isSym("(")) d.cols = identList();
+				expectKw("AS");
+				expectSym("(");
+				expectKw("SELECT");
+				d.sel = selectBody();
+				expectSym(")");
+				defs.push_back(std::move(d));
+			} while (acceptSym(","));
+			expectKw("SELECT");
+			s.sel = selectBody();
+			s.sel->ctes = std::move(defs);
+			s.sel->recursive = rec;
+		}
 		else if (acceptKw("INSERT")) insert(s);
+		else if (acceptKw("REPLACE")) { insert(s); s.replace = true; }
 		else if (acceptKw("UPDATE")) update(s);
 		else if (acceptKw("DELETE")) { s.k = SK::Delete; expectKw("FROM"); tableName(s.db, s.name); tail(s); }
 		else if (acceptKw("CREATE")) {
@@ -641,7 +873,20 @@ namespace {
 		else if (acceptKw("START")) { expectKw("TRANSACTION"); s.k = SK::Begin; }
 		else if (acceptKw("COMMIT")) s.k = SK::Commit;
 		else if (acceptKw("ROLLBACK")) s.k = SK::Rollback;
-		else if (isKw("SET")) { s.k = SK::Ignored; skipRest(); }
+		else if (isKw("SET")) {
+			adv();
+			if (isSym("@") && !isSymAt(1, "@")) {  // SET @var = expr [, @var2 = expr ...]
+				s.k = SK::SetVar;
+				do {
+					if (!acceptSym("@")) { skipItem(); continue; }
+					std::string nm = ident();
+					for (char& ch : nm) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+					if (!acceptSym(":=")) expectSym("=");
+					s.sets.emplace_back("@" + nm, expr());
+				} while (acceptSym(","));
+			}
+			else { s.k = SK::Ignored; skipRest(); }
+		}
 		else fail();
 		acceptSym(";");
 		if (cur().type != Tok::End) fail();

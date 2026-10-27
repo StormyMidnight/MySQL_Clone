@@ -118,7 +118,7 @@ std::vector<Token> lex(const std::string& q) {
             t.text = v;
         }
         else {
-            static const char* two[] = { "<=>", "<=", ">=", "<>", "!=", "||", "&&", ":=" };
+            static const char* two[] = { "->>", "->", "<=>", "<=", ">=", "<>", "!=", "||", "&&", ":=" };
             bool matched = false;
             for (const char* op : two) {
                 std::string o = op;
