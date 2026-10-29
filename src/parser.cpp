@@ -14,7 +14,7 @@ namespace {
 	bool reserved(const std::string& w) {
 		static const std::set<std::string> r = {
 			"FROM", "WHERE", "GROUP", "HAVING", "ORDER", "LIMIT", "JOIN", "INNER", "LEFT", "RIGHT", "CROSS",
-			"OUTER", "ON", "UNION", "INTERSECT", "EXCEPT", "SET", "VALUES", "AS", "AND", "OR", "NOT", "USING", "NATURAL", "FULL",
+			"OUTER", "ON", "UNION", "INTERSECT", "EXCEPT", "FOR", "LOCK", "SET", "VALUES", "AS", "AND", "OR", "NOT", "USING", "NATURAL", "FULL",
 			"OFFSET", "SELECT", "INTO", "DISTINCT", "WHEN", "THEN", "ELSE", "END", "IS", "IN", "LIKE",
 			"BETWEEN", "DIV", "MOD" };
 		return r.count(upper(w)) > 0;
@@ -297,6 +297,24 @@ namespace {
 				adv();
 				if (f->name == "EXTRACT") expectKw("FROM"); else expectSym(",");
 			}
+			if (f->name == "CAST" || f->name == "CONVERT") {
+				auto x = expr();
+				if (f->name == "CONVERT" && acceptKw("USING")) { ident(); expectSym(")"); f->name = "CAST"; f->args.push_back(std::move(x)); f->args.push_back(lit(Value::text("CHAR"))); f->args.push_back(lit(Value::integer(0))); f->args.push_back(lit(Value::integer(0))); return f; }
+				if (f->name == "CAST") expectKw("AS"); else expectSym(",");
+				std::string ty = upper(cur().text);
+				adv();
+				if (ty == "SIGNED" || ty == "UNSIGNED") acceptKw("INTEGER");
+				if (ty == "DOUBLE") acceptKw("PRECISION");
+				int64_t m = 0, d = 0;
+				if (acceptSym("(")) { m = intTok(); if (acceptSym(",")) d = intTok(); expectSym(")"); }
+				expectSym(")");
+				f->name = "CAST";
+				f->args.push_back(std::move(x));
+				f->args.push_back(lit(Value::text(ty)));
+				f->args.push_back(lit(Value::integer(m)));
+				f->args.push_back(lit(Value::integer(d)));
+				return f;
+			}
 			if (acceptKw("DISTINCT")) f->distinct = true;
 			do f->args.push_back(expr()); while (acceptSym(","));
 			if (acceptKw("SEPARATOR")) { if (cur().type != Tok::Str) fail(); f->table = cur().text; adv(); }
@@ -393,6 +411,12 @@ namespace {
 				if (acceptSym(",")) { s->offset = a; s->limit = intTok(); }
 				else { s->limit = a; if (acceptKw("OFFSET")) s->offset = intTok(); }
 			}
+			if (isKw("FOR") && (isKwAt(1, "UPDATE") || isKwAt(1, "SHARE"))) {  // locking reads: accepted, no-op in this engine
+				adv(); adv();
+				if (acceptKw("OF")) { ident(); while (acceptSym(",")) ident(); }
+				if (acceptKw("NOWAIT")) {} else if (acceptKw("SKIP")) expectKw("LOCKED");
+			}
+			else if (isKw("LOCK") && isKwAt(1, "IN")) { adv(); adv(); expectKw("SHARE"); expectKw("MODE"); }
 			return s;
 		}
 		int parenN_ = 0;

@@ -1,58 +1,24 @@
-# mysqlclone
+# MySQL Clone
+A high-performance from-scratch C++17 MySQL-dialect SQL engine and interactive command-line interface. Engineered without external dependencies beyond the C++ STL (plus POSIX `isatty`), compiling warning-free under strict compilation flags (`-Wall -Wextra -Wpedantic -Werror`).
 
-From-scratch C++17 MySQL-dialect SQL engine and CLI. No dependencies beyond the STL (+ POSIX `isatty`). Builds warning-free with `-Wall -Wextra -Wpedantic -Werror`.
+## Quick Start & Build
+Requires a modern C++17 compiler and `make`.
+```bash
+make        # Builds the ./mysqlclone executable
+make test   # Runs tests/smoke.sql against tests/expected.txt
+```
 
-    make            # builds ./mysqlclone
-    make test       # runs tests/smoke.sql against tests/expected.txt
-    ./mysqlclone                     # interactive monitor (data in ./mysqlclone.data)
-    ./mysqlclone --memory -t < x.sql # in-memory, table output
-    ./mysqlclone -D db -e "SELECT 1" # one-shot (tab-separated unless -t)
+### CLI Modes
+```bash
+./mysqlclone                         # Interactive monitor (persists data in ./mysqlclone.data)
+./mysqlclone --memory -t < x.sql     # In-memory execution with tabular output
+./mysqlclone -D db -e "SELECT 1"     # One-shot execution (tab-separated unless -t specified)
+```
 
-Server mode (MySQL wire protocol, so `mysql`/connectors can connect):
-
-    ./mysqlclone --listen 3307 [--bind 127.0.0.1] [--user root --password secret]
-    mysql -h127.0.0.1 -P3307 -uroot -psecret
-
-Supports the v10 handshake, `mysql_native_password` (verified if `--user/--password` given, otherwise any credentials are accepted — keep it bound to localhost), COM_QUERY/INIT_DB/PING/QUIT, text-protocol result sets, prepared statements over the binary protocol (COM_STMT_PREPARE/EXECUTE/SEND_LONG_DATA/RESET/CLOSE; `?` placeholders incl. `LIMIT ?`; parameters are bound as escaped SQL literals so the WAL stays replayable; verified with a raw-protocol test client, not yet with real drivers), OK/ERR packets with MySQL codes, `@@system` variables, SHOW VARIABLES/WARNINGS. Clients are served one at a time; an open transaction is rolled back on disconnect. Not supported: server-side cursors (COM_STMT_FETCH), TLS, compression.
-
-Flags: `-e SQL`, `-t` table output, `-f` keep going after errors in scripts, `-D db`, `--data FILE`, `--memory`, `--listen PORT`, `--bind`, `--user`, `--password`.
-
-## Supported
-- DDL: CREATE/DROP DATABASE, CREATE/DROP/TRUNCATE TABLE (IF [NOT] EXISTS), column types: INT family (TINYINT..BIGINT, `UNSIGNED`, range-checked, error 1264), FLOAT/DOUBLE (floating point) and DECIMAL(p,s)/NUMERIC (rounded to scale, range-checked, printed with exactly `s` places; backed by a double, so exact up to ~15 digits), CHAR/VARCHAR/TEXT/BLOB (length-checked), Oracle-style aliases VARCHAR2/NVARCHAR2/NVARCHAR/NCHAR (`VARCHAR2(10 CHAR)` ok), DATE/DATETIME/TIMESTAMP (validated and normalized to ISO text; also accepts YYYYMMDD ints; error 1292), ENUM (unchecked); NOT NULL, DEFAULT (incl. CURRENT_TIMESTAMP), AUTO_INCREMENT, PRIMARY KEY (column or composite), UNIQUE; other index/FK clauses are parsed and ignored.
-- DML: INSERT (multi-row, column list, DEFAULT, INSERT ... SELECT), UPDATE / DELETE with WHERE, ORDER BY, LIMIT.
-- SELECT: expressions, aliases, `*`, `t.*`, DISTINCT, INNER/LEFT/RIGHT/CROSS/comma joins, WHERE, GROUP BY (column/alias/ordinal), HAVING (aliases ok), ORDER BY (expr/alias/ordinal), LIMIT n / n,m / OFFSET, CASE, IN, BETWEEN, LIKE, IS NULL, `<=>`, three-valued logic.
-- Aggregates: COUNT (incl. DISTINCT, *), SUM, AVG, MIN, MAX, GROUP_CONCAT.
-- Date functions: DATE, DATEDIFF, DATE_ADD/DATE_SUB/ADDDATE/SUBDATE (`INTERVAL n SECOND..YEAR`, also `date + INTERVAL 1 DAY`), DAYOFWEEK, HOUR/MINUTE/SECOND, YEAR/MONTH/DAY. DATE/DATETIME columns compared (=, <, BETWEEN, IN ...) with loosely formatted literals like `'2024-1-5'` are normalized first.
-- Numeric typing follows MySQL: INT/DECIMAL arithmetic yields DECIMAL (`10/4` = `2.5000`, `AVG(int)` = `2.0000`, `2*1.50` = `3.00`), decimal literals are exact decimals, anything involving DOUBLE or text is floating point.
-- Functions: CONCAT, UPPER/LOWER, LENGTH, CHAR_LENGTH, SUBSTRING, TRIM/LTRIM/RTRIM, REPLACE, LEFT/RIGHT, REVERSE, REPEAT, ABS, ROUND, FLOOR, CEIL, MOD, POW, SQRT, COALESCE, IFNULL, NULLIF, IF, GREATEST, LEAST, NOW, CURDATE, YEAR/MONTH/DAY, DATABASE, VERSION, LAST_INSERT_ID.
-- Subqueries (scalar, IN, EXISTS; correlated subqueries supported to any nesting depth — uncorrelated ones are evaluated once and cached), UNION / UNION ALL, ALTER TABLE (ADD [COLUMN] / DROP [COLUMN] / RENAME TO / ADD UNIQUE), CREATE [UNIQUE] INDEX, DROP INDEX (non-unique indexes are accepted but not stored).
-- Views: `CREATE [OR REPLACE] VIEW v [(cols)] AS SELECT ...`, `DROP VIEW [IF EXISTS]`; views are read-only (error 1288 on DML), may reference other views (recursion guard), appear in `SHOW TABLES`/`DESCRIBE`, and persist (snapshot v4 / WAL). A view is materialized per query (no predicate pushdown).
-- ALTER TABLE also supports `MODIFY` / `CHANGE` (rows converted and re-validated; all-or-nothing), `RENAME COLUMN a TO b`, `ADD/DROP PRIMARY KEY`, `ADD INDEX`, `DROP INDEX`. A trailing `ORDER BY` / `LIMIT` applies to the whole UNION.
-- SHOW DATABASES/TABLES/COLUMNS/CREATE TABLE, DESCRIBE, USE.
-- BEGIN/START TRANSACTION/COMMIT/ROLLBACK (snapshot-based; DDL implicitly commits). `SET ...` is accepted and ignored.
-- `INSERT IGNORE`, `REPLACE INTO` (new row takes the slot of the first conflicting row, other conflicts deleted; affected rows = 1 + deleted), `INSERT ... ON DUPLICATE KEY UPDATE` (with `VALUES(col)`; 2 affected rows if changed, 0 if not; assignments see earlier assignments), including `INSERT ... SELECT`. Not supported: the `AS new` row alias form.
-- Derived tables (`FROM (SELECT ...) alias`, also in joins; alias required, error 1248) and CTEs: `WITH [RECURSIVE] name [(cols)] AS (...), ... SELECT ...` (later CTEs see earlier ones; recursive CTEs via UNION [ALL], capped at 1000 iterations like `cte_max_recursion_depth`, error 3636). CTEs are materialized per statement; they are not supported inside subqueries, INSERT ... SELECT or CREATE VIEW.
-- Window functions with `OVER ([PARTITION BY ...] [ORDER BY ...] [ROWS|RANGE frame])`: ROW_NUMBER, RANK, DENSE_RANK, PERCENT_RANK, CUME_DIST, NTILE, LAG, LEAD, FIRST_VALUE, LAST_VALUE, NTH_VALUE and COUNT/SUM/AVG/MIN/MAX/GROUP_CONCAT as window aggregates; usable in the select list and ORDER BY, and over grouped results (`RANK() OVER (ORDER BY SUM(x) DESC)`). Default frame follows MySQL (RANGE UNBOUNDED PRECEDING..CURRENT ROW with ORDER BY, whole partition without). `RANGE` with numeric offsets, named windows (`WINDOW w AS ...`) and `EXCLUDE` are not supported; window aggregates over a sliding frame are O(rows x frame).
-- User variables: `SET @a = 1, @b := 'x'`, `SELECT @a`, and assignment inside queries (`@r := @r + 1`); session scoped, case-insensitive, NULL when unset. Statements that may read variables are written to the WAL after `SET`s that restore them, so crash recovery replays correctly.
-- `INTERSECT` / `EXCEPT` (with `ALL`), combined with `UNION` using MySQL 8.0.31+ precedence (INTERSECT binds tighter); trailing ORDER BY / LIMIT applies to the whole chain. Parenthesized query blocks are not supported.
-- More functions: CONCAT_WS, INSTR, LOCATE, LPAD, RPAD, SPACE, ASCII, STRCMP, FIELD, FORMAT, ISNULL, SIGN, TRUNCATE, EXP, LN, LOG/LOG2/LOG10, SIN/COS/TAN/ASIN/ACOS/ATAN/ATAN2, DEGREES, RADIANS, PI, DAYOFMONTH, DAYOFYEAR, WEEKDAY, DAYNAME, MONTHNAME, QUARTER, LAST_DAY, TO_DAYS, FROM_DAYS, DATE_FORMAT (%Y %y %m %c %d %e %H %k %h %I %l %i %s %S %p %M %b %W %a %w %j %T %%).
-- Parenthesized query blocks in set operations and as a statement: `(SELECT ... LIMIT 2) UNION (SELECT ... ) ORDER BY ...` (each block keeps its own ORDER BY/LIMIT; a trailing one applies to the whole chain).
-- Date functions: TIMESTAMPDIFF, TIMESTAMPADD, EXTRACT(unit FROM ...) (YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, QUARTER, YEAR_MONTH), STR_TO_DATE (%Y %y %m %c %d %e %H %k %h %I %l %i %s %S %p %M %b %W %a %%), UNIX_TIMESTAMP, FROM_UNIXTIME (server local time zone, like NOW()).
-- Foreign keys: `FOREIGN KEY [idx] (cols) REFERENCES t (cols) [ON DELETE|UPDATE NO ACTION|RESTRICT|CASCADE|SET NULL]` in CREATE TABLE and `ALTER TABLE ADD [CONSTRAINT n] FOREIGN KEY` / `DROP FOREIGN KEY n`; composite and self-referencing keys; a supporting child index is created automatically like InnoDB. Enforced on INSERT / REPLACE / ON DUPLICATE KEY UPDATE / UPDATE (error 1452) and on DELETE / UPDATE of parent rows (1451, cascades and SET NULL applied transitively, rolled back as a unit on error). DROP TABLE / TRUNCATE of a referenced table are refused (3730 / 1701); DROP/MODIFY of FK columns is refused; RENAME TABLE / RENAME COLUMN keep references intact; SHOW CREATE TABLE prints constraints; persisted in the data file (format 5, older files still load). Limits: ON UPDATE CASCADE/SET NULL on a self-referencing key acts as RESTRICT; dropping an index that supports a foreign key is not blocked; inline `col REFERENCES t(c)` is parsed and ignored (as in MySQL); SET DEFAULT is rejected.
-- `REGEXP` / `RLIKE` / `NOT REGEXP`, `REGEXP_LIKE` (with match type c/i), `REGEXP_REPLACE` (3 args), `REGEXP_SUBSTR`, `REGEXP_INSTR` (2 args), case-insensitive by default; implemented with std::regex (ECMAScript syntax, not ICU). `LIKE ... ESCAPE 'c'`.
-- `CHECK` constraints: column-level `CHECK (...)`, table-level `[CONSTRAINT n] CHECK (...) [[NOT] ENFORCED]`, `ALTER TABLE ADD CONSTRAINT n CHECK (...)` (validates existing rows) and `DROP CHECK n` / `DROP CONSTRAINT n`. Enforced on INSERT / REPLACE / ON DUPLICATE KEY UPDATE / UPDATE (error 3819; a NULL result passes; INSERT IGNORE skips the row with a warning); auto-named `<table>_chk_<n>`; persisted (data file format 6). The condition is stored and printed as written (MySQL prints a normalized form); dropping or renaming a column used by a CHECK is not blocked.
-- `INFORMATION_SCHEMA` (read-only, built on demand): SCHEMATA, TABLES, COLUMNS, STATISTICS, TABLE_CONSTRAINTS, KEY_COLUMN_USAGE, REFERENTIAL_CONSTRAINTS, CHECK_CONSTRAINTS; `USE information_schema` works and SHOW DATABASES lists it. Headers keep the case you typed (MySQL 8 returns upper case).
-- `SHOW INDEX|INDEXES|KEYS FROM t`, `SHOW TABLE STATUS [LIKE]`, `SHOW [FULL] TABLES [LIKE]`, `SHOW DATABASES LIKE`, `SHOW [FULL] COLUMNS FROM t [LIKE]`, `SHOW CREATE DATABASE`, `SHOW CREATE VIEW` (view text as stored, not normalized). Table status sizes are placeholders; index cardinality is exact.
-- `ALTER TABLE ... ADD|MODIFY|CHANGE [COLUMN] ... FIRST | AFTER col`: rows, indexes and foreign keys follow the reordering. `UNIQUE KEY name (cols)` keeps its name.
-- `JSON` column type (validated, normalized to MySQL's text form: keys sorted by length then bytes, `{"a": 1, "b": [1, 2]}`; error 3140 on bad text) with `->` / `->>`, JSON_EXTRACT (multiple paths, `[*]`, `.*`, `**`), JSON_UNQUOTE, JSON_QUOTE, JSON_VALID, JSON_TYPE, JSON_LENGTH, JSON_KEYS, JSON_OBJECT, JSON_ARRAY, JSON_CONTAINS, JSON_CONTAINS_PATH, JSON_SET / INSERT / REPLACE / REMOVE, JSON_ARRAY_APPEND, JSON_MERGE_PATCH and the aggregates JSON_ARRAYAGG / JSON_OBJECTAGG. JSON values are text carrying a flag (kept across restarts via the column type); comparisons use ordinary SQL rules, so compare `->>` results with strings and `->` results with JSON text. Not supported: JSON_SEARCH, JSON_MERGE_PRESERVE, JSON_PRETTY, JSON_DEPTH, path ranges (`[1 to 3]`, `last`), CAST(... AS JSON), JSON indexes.
-- Generated columns: `col type [GENERATED ALWAYS] AS (expr) [VIRTUAL|STORED]` in CREATE TABLE and ALTER ... ADD COLUMN. Both kinds are materialized and recomputed on INSERT / REPLACE / ON DUPLICATE KEY UPDATE / UPDATE, so they can be indexed and used in CHECKs and foreign keys; writing one explicitly gives error 3105. Shown by SHOW CREATE TABLE and as VIRTUAL/STORED GENERATED in DESCRIBE; data file format 7. Limits: renaming or dropping a column used by a generated column is not blocked; MODIFY of a generated column does not recompute existing rows.
-- Ordered (B-tree-style, `std::map`) indexes: PRIMARY/UNIQUE/`KEY`/`CREATE INDEX`/`ALTER ... ADD INDEX`, composite keys, persisted in the snapshot (v3; v1/v2 files still load). The planner turns WHERE conjuncts (`=`, `<`, `<=`, `>`, `>=`, `BETWEEN`, `IN (...)`, constants on either side, DATE literals normalized) into point/prefix/range scans, also for UPDATE/DELETE and correlated subqueries (outer columns count as constants); joins probe an index on the right table when one exists. `EXPLAIN SELECT ...` shows type/key/rows. Uniqueness checks use the index (O(log n)). Rows with NULL in an indexed column are not indexed. Indexes are derived data, maintained incrementally on INSERT/UPDATE and rebuilt lazily after DELETE/ALTER/rollback. 100k-row table: point lookup, range scan, 500x100k indexed join and correlated subquery all run in a few ms each.
-- Hash join for equi-joins (`a.x = b.y`, same-kind types), hash-indexed uniqueness checks during INSERT (4k x 4k join in ~50 ms).
-- MySQL-style errors (1062 duplicate entry, 1146, 1054, 1064, ...), MySQL-style table output and timing lines.
-- Durability: write-ahead log (`<data>.wal`, checksummed groups, fsync per commit) + atomic snapshot checkpoints (every 500 commits and on clean exit). Startup loads the snapshot and replays the WAL; torn tails are discarded, uncommitted transactions are never logged. Statement timestamps are logged so NOW() replays deterministically. `--crash-test` exits without a checkpoint to simulate a crash.
-
-## Not yet (honest limits)
-named windows / RANGE offsets, CTEs in subqueries, a cost-based join planner (joins use an index probe or hash join for equi-joins, nested loop otherwise; no join reordering), index-ordered ORDER BY/covering scans, indexes on prefixes/expressions, foreign keys, `ALTER ... FIRST/AFTER`, updatable views, arbitrary-precision DECIMAL (>15 digits), case-sensitivity options, MVCC/concurrency (single-user; WAL is logical, statement-level), concurrent sessions. Single-session, whole-snapshot persistence.
-
-## Layout
-`src/value.hpp` values/errors · `lexer` · `ast.hpp` · `parser` · `storage` (catalog + snapshot file) · `executor` (eval, planner-free executor) · `wal` (write-ahead log) · `server` (wire protocol) · `main.cpp` (shell).
+### Server Mode (MySQL Wire Protocol)
+Spawns a native MySQL-compatible server socket so standard database clients and connectors can connect directly:
+```bash
+./mysqlclone --listen 3307 [--bind 127.0.0.1] [--user root --password secret]
+mysql -h127.0.0.1 -P3307 -uroot -psecret
+```
+*Supports the v10 handshake, `mysql_native_password` authentication, `COM_QUERY`, `INIT_DB`, `PING`, `QUIT`, text-protocol result sets, and binary protocol prepared statements (`COM_STMT_PREPARE`, `EXECUTE`, `SEND_LONG_DATA`, `RESET`, `CLOSE`).*

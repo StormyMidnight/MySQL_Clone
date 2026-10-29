@@ -415,7 +415,7 @@ namespace {
             for (;;) { size_t j = s.find(f, i); if (j == std::string::npos) { r += s.substr(i); break; } r += s.substr(i, j - i) + t; i = j + f.size(); }
             return Value::text(r);
         }
-        if (n == "SUBSTRING" || n == "SUBSTR") {
+        if (n == "SUBSTRING" || n == "SUBSTR" || n == "MID") {
             chk(2, 3);
             if (anyNull()) return Value();
             std::string s = a[0].str();
@@ -902,6 +902,82 @@ namespace {
                 return jvalue(acc);
             }
             throw SqlError(1305, "42000", "FUNCTION " + n + " does not exist");
+        }
+        if (n == "CAST") {
+            chk(4, 4);
+            if (a[0].isNull()) return Value();
+            const std::string ty = a[1].str();
+            const int64_t m = a[2].asInt(), d = a[3].asInt();
+            if (ty == "SIGNED" || ty == "UNSIGNED") return Value::integer(a[0].t == Value::T::Int ? a[0].i : static_cast<int64_t>(std::llround(a[0].asReal())));
+            if (ty == "DOUBLE" || ty == "FLOAT" || ty == "REAL") return Value::real(a[0].asReal());
+            if (ty == "DECIMAL" || ty == "NUMERIC") {
+                int sc = static_cast<int>(d);
+                double mul = std::pow(10.0, sc);
+                return Value::dec(std::round(a[0].asReal() * mul) / mul, sc);
+            }
+            if (ty == "CHAR" || ty == "BINARY" || ty == "NCHAR") { std::string s = a[0].str(); return Value::text(m > 0 ? cut(s, static_cast<size_t>(m)) : s); }
+            if (ty == "DATE" || ty == "DATETIME" || ty == "TIMESTAMP") {
+                DT t; bool ht = false;
+                if (!parseDT(a[0].str(), t, ht)) return Value();
+                return Value::text(fmtDT(t, ty != "DATE"));
+            }
+            if (ty == "JSON") {
+                jsn::J j;
+                if (a[0].json) return a[0];
+                if (a[0].t != Value::T::Text) return jvalue(jvalOf(a[0]));
+                if (!jsn::parse(a[0].s, j)) throw SqlError(3141, "22032", "Invalid JSON text in argument 1 to function cast_as_json: \"Invalid value.\" at position 0.");
+                return jvalue(j);
+            }
+            throw SqlError(1064, "42000", "You have an error in your SQL syntax; unsupported CAST type " + ty);
+        }
+        if (n == "SUBSTRING_INDEX") {
+            chk(3, 3);
+            if (anyNull()) return Value();
+            std::string s = a[0].str(), dl = a[1].str();
+            int64_t cnt = a[2].asInt();
+            if (dl.empty() || cnt == 0) return Value::text("");
+            if (cnt > 0) {
+                size_t pos = 0;
+                for (int64_t k = 0; k < cnt; ++k) { size_t f = s.find(dl, pos); if (f == std::string::npos) return Value::text(s); if (k == cnt - 1) return Value::text(s.substr(0, f)); pos = f + dl.size(); }
+            }
+            size_t end = s.size();
+            for (int64_t k = 0; k < -cnt; ++k) { size_t f = end < dl.size() ? std::string::npos : s.rfind(dl, end - dl.size()); if (f == std::string::npos) return Value::text(s); if (k == -cnt - 1) return Value::text(s.substr(f + dl.size())); end = f; }
+            return Value::text(s);
+        }
+        if (n == "HEX" || n == "BIN" || n == "OCT") {
+            chk(1, 1);
+            if (anyNull()) return Value();
+            std::string o;
+            char b[24];
+            if (a[0].t == Value::T::Text) { for (unsigned char ch : a[0].s) { std::snprintf(b, sizeof b, "%02X", ch); o += b; } return Value::text(o); }
+            uint64_t v = static_cast<uint64_t>(a[0].asInt());
+            if (n == "HEX") { std::snprintf(b, sizeof b, "%llX", static_cast<unsigned long long>(v)); return Value::text(b); }
+            int base = n == "BIN" ? 2 : 8;
+            if (v == 0) return Value::text("0");
+            while (v) { o.insert(o.begin(), static_cast<char>('0' + v % static_cast<uint64_t>(base))); v /= static_cast<uint64_t>(base); }
+            return Value::text(o);
+        }
+        if (n == "UNHEX") {
+            chk(1, 1);
+            if (anyNull()) return Value();
+            std::string h = a[0].str(), o;
+            if (h.size() % 2) h = "0" + h;
+            for (size_t i = 0; i < h.size(); i += 2) {
+                if (!std::isxdigit(static_cast<unsigned char>(h[i])) || !std::isxdigit(static_cast<unsigned char>(h[i + 1]))) return Value();
+                o += static_cast<char>(std::stoi(h.substr(i, 2), nullptr, 16));
+            }
+            return Value::text(o);
+        }
+        if (n == "ELT") {
+            chk(2, 1000);
+            if (a[0].isNull()) return Value();
+            int64_t k = a[0].asInt();
+            return k >= 1 && static_cast<size_t>(k) < a.size() ? a[static_cast<size_t>(k)] : Value();
+        }
+        if (n == "BIT_LENGTH" || n == "OCTET_LENGTH") {
+            chk(1, 1);
+            if (anyNull()) return Value();
+            return Value::integer(static_cast<int64_t>(a[0].str().size()) * (n == "BIT_LENGTH" ? 8 : 1));
         }
         // single-argument functions below
         chk(1, n == "ROUND" ? 2 : 1);
